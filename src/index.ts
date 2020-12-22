@@ -10,7 +10,7 @@ import {
   saveIdsToJson,
   update,
   upload
-} from "./functions";
+} from "./functions"; // from "lib-zenodo-api" where lib-zenodo-api is module in npm install
 
 const parser = new argparse.ArgumentParser({"description": "Zenodo command line utility"});
 parser.add_argument("--config", {

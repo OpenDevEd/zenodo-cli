@@ -14,13 +14,13 @@ var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (
 var __importStar = (this && this.__importStar) || function (mod) {
     if (mod && mod.__esModule) return mod;
     var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
     __setModuleDefault(result, mod);
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const argparse = __importStar(require("argparse"));
-const functions_1 = require("./functions");
+const functions_1 = require("./functions"); // from "lib-zenodo-api" where lib-zenodo-api is module in npm install
 const parser = new argparse.ArgumentParser({ "description": "Zenodo command line utility" });
 parser.add_argument("--config", {
     "action": "store",
