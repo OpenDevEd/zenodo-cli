@@ -292,11 +292,11 @@ parser_concept.add_argument("--show", {
   "default": false
 });
 parser_concept.set_defaults({"func": concept});
-const args = parser.parse_args();
+parser.parse_args();
 if ((process.argv.length === 1)) {
   parser.print_help();
   process.exit(1);
 }
 
-console.log(args);
-args.func(args);
+//console.log(args);
+//args.func(args);
