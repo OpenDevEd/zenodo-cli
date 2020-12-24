@@ -21,6 +21,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const argparse = __importStar(require("argparse"));
 const functions_1 = require("./functions"); // from "lib-zenodo-api" where lib-zenodo-api is module in npm install
+console.log("checking...");
 const parser = new argparse.ArgumentParser({ "description": "Zenodo command line utility" });
 parser.add_argument("--config", {
     "action": "store",
@@ -290,12 +291,14 @@ parser_concept.add_argument("--show", {
     "help": "Show the info of the deposition after executing the command.",
     "default": false
 });
+//parsing agrument.
 parser_concept.set_defaults({ "func": functions_1.concept });
-parser.parse_args();
+var args = parser.parse_args();
+//parser.parse_args();
 if ((process.argv.length === 1)) {
     parser.print_help();
     process.exit(1);
 }
-//console.log(args);
-//args.func(args);
+console.log(args);
+args.func(args);
 //# sourceMappingURL=index.js.map

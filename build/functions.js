@@ -24,7 +24,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.create = exports.concept = exports.download = exports.newVersion = exports.listDepositions = exports.copy = exports.update = exports.upload = exports.duplicate = exports.dumpDeposition = exports.saveIdsToJson = void 0;
 const axios_1 = __importDefault(require("axios"));
-//import axios, { AxiosRequestConfig, AxiosPromise, AxiosResponse } from 'axios';
 const fs = __importStar(require("fs"));
 const opn_1 = __importDefault(require("opn"));
 const helper_1 = require("./helper");
@@ -45,6 +44,7 @@ async function showDeposition(args, id) {
 }
 async function getData(args, id) {
     const { zenodoAPIUrl, params } = helper_1.loadConfig(args.config);
+    console.log(`getting data`);
     id = helper_1.parseId(id);
     let res = await axios_1.default.get(`${zenodoAPIUrl}/${id}`, { "params": params });
     if ((res.status !== 200)) {

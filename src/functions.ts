@@ -29,6 +29,7 @@ async function showDeposition(args, id) {
 
 async function getData(args, id) {
   const {zenodoAPIUrl, params} = loadConfig(args.config);
+  console.log(`getting data`);
   id = parseId(id);
   let res = await axios.get(`${zenodoAPIUrl}/${id}`, {"params": params});
   if ((res.status !== 200)) {
