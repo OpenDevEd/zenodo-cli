@@ -1,5 +1,6 @@
 import * as fs from "fs";
 
+
 const FALLBACK_CONFIG_FILE = (process.env.HOME + "/.config/zenodo-cli/config.json");
 
 export function in_es6(left, right) {

@@ -63,16 +63,16 @@ function loadConfig(configFile) {
 exports.loadConfig = loadConfig;
 function parseId(id) {
     var dot_split, slash_split;
-    if (id.toString().isnumeric()) {
+    if (!isNaN(id.toString)) {
         return id;
     }
     slash_split = id.toString().split("/").slice((-1))[0];
-    if (slash_split.isnumeric()) {
+    if (!isNaN(slash_split)) {
         id = slash_split;
     }
     else {
         dot_split = id.toString().split(".").slice((-1))[0];
-        if (dot_split.isnumeric()) {
+        if (!isNaN(dot_split)){
             id = dot_split;
         }
     }
