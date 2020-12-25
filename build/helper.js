@@ -31,7 +31,7 @@ function in_es6(left, right) {
             return right.has(left);
         }
         else {
-            return (left in right);
+            return (left.indexOf(right) !== -1);
         }
     }
 }

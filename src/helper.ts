@@ -10,7 +10,7 @@ export function in_es6(left, right) {
     if (((right instanceof Map) || (right instanceof Set) || (right instanceof WeakMap) || (right instanceof WeakSet))) {
       return right.has(left);
     } else {
-      return (left in right);
+      return (left.indexOf(right) !== -1);
     }
   }
 }
@@ -42,15 +42,15 @@ export function loadConfig(configFile) {
 
 export function parseId(id) {
   var dot_split, slash_split;
-  if (id.toString().isnumeric()) {
+  if (!isNaN(id.toString())) {
     return id;
   }
   slash_split = id.toString().split("/").slice((-1))[0];
-  if (slash_split.isnumeric()) {
+  if (!isNaN(slash_split)) {
     id = slash_split;
   } else {
     dot_split = id.toString().split(".").slice((-1))[0];
-    if (dot_split.isnumeric()) {
+    if (!isNaN(dot_split)) {
       id = dot_split;
     }
   }
