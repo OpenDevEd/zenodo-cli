@@ -16,15 +16,14 @@ export function in_es6(left, right) {
 }
 
 export function loadConfig(configFile) {
-  if (fs.statSync(configFile).isFile()) {
-  } else {
+  console.log("load file checking ...")
     if (fs.statSync(FALLBACK_CONFIG_FILE).isFile()) {
       configFile = FALLBACK_CONFIG_FILE;
+      
     } else {
       console.log(`Config file not present at config.json or ${FALLBACK_CONFIG_FILE}`);
       process.exit(1);
     }
-  }
 
   const content = fs.readFileSync(configFile, "utf8");
   const config = JSON.parse(content);
