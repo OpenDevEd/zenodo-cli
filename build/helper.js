@@ -37,16 +37,13 @@ function in_es6(left, right) {
 }
 exports.in_es6 = in_es6;
 function loadConfig(configFile) {
-    if (fs.statSync(configFile).isFile()) {
+    console.log("load file checking ...");
+    if (fs.statSync(FALLBACK_CONFIG_FILE).isFile()) {
+        configFile = FALLBACK_CONFIG_FILE;
     }
     else {
-        if (fs.statSync(FALLBACK_CONFIG_FILE).isFile()) {
-            configFile = FALLBACK_CONFIG_FILE;
-        }
-        else {
-            console.log(`Config file not present at config.json or ${FALLBACK_CONFIG_FILE}`);
-            process.exit(1);
-        }
+        console.log(`Config file not present at config.json or ${FALLBACK_CONFIG_FILE}`);
+        process.exit(1);
     }
     const content = fs.readFileSync(configFile, "utf8");
     const config = JSON.parse(content);
@@ -63,7 +60,7 @@ function loadConfig(configFile) {
 exports.loadConfig = loadConfig;
 function parseId(id) {
     var dot_split, slash_split;
-    if (!isNaN(id.toString)) {
+    if (!isNaN(id.toString())) {
         return id;
     }
     slash_split = id.toString().split("/").slice((-1))[0];
@@ -72,7 +69,7 @@ function parseId(id) {
     }
     else {
         dot_split = id.toString().split(".").slice((-1))[0];
-        if (!isNaN(dot_split)){
+        if (!isNaN(dot_split)) {
             id = dot_split;
         }
     }
