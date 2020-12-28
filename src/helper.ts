@@ -16,7 +16,7 @@ export function in_es6(left, right) {
 }
 
 export function loadConfig(configFile) {
-  console.log("load file checking ...")
+  //console.log("load file checking ...")
     if (fs.statSync(FALLBACK_CONFIG_FILE).isFile()) {
       configFile = FALLBACK_CONFIG_FILE;
       

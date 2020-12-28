@@ -120,21 +120,17 @@ async function finalActions(args, id, deposit_url) {
 
 export async function saveIdsToJson(args) {
   let data, ids;
-  //let f;
   ids = parseIds(args.id);
-  console.log(ids)
   for (let id, _pj_c = 0, _pj_a = ids, _pj_b = _pj_a.length; (_pj_c < _pj_b); _pj_c += 1) {
     id = _pj_a[_pj_c];
     data = await getData(args, id);
-    console.log(data)
+    //console.log(data)
     const path = `${id}.json`;
     const buffer = Buffer.from(JSON.stringify(data["metadata"]));
-
     fs.open(path, 'w', function(err, fd) {
       if (err) {
           throw 'could not open file: ' + err;
       }
-  
       // write the contents of the buffer, from position 0 to the end, to the file descriptor returned in opening our file
       fs.write(fd, buffer, 0, buffer.length, null, function(err) {
           if (err) throw 'error writing file: ' + err;
@@ -143,10 +139,6 @@ export async function saveIdsToJson(args) {
           });
       });
     });
-    
-    //f = fs.writeFileSync(`${id}.json`, buffer, {encoding: 'utf8'});
-    //f.close();
-    //console.log(data["metadata"]);
     await finalActions(args, id, data["links"]["html"]);
   }
 }
