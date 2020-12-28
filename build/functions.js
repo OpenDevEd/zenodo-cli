@@ -131,10 +131,12 @@ async function finalActions(args, id, deposit_url) {
 async function saveIdsToJson(args) {
     let data, f, ids;
     ids = helper_1.parseIds(args.id);
+    console.log(ids);
     for (let id, _pj_c = 0, _pj_a = ids, _pj_b = _pj_a.length; (_pj_c < _pj_b); _pj_c += 1) {
         id = _pj_a[_pj_c];
         data = await getData(args, id);
-        f = fs.writeFileSync(`${id}.json`, data["metadata"], { encoding: 'utf8' });
+        console.log(data);
+        f = fs.writeFileSync(`${id}.json`, data["metadata"].toString(), { encoding: 'utf8' });
         f.close();
         await finalActions(args, id, data["links"]["html"]);
     }

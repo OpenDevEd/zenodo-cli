@@ -300,6 +300,9 @@ if ((process.argv.length === 1)) {
   parser.print_help();
   process.exit(1);
 }
-
 console.log(args);
 args.func(args);
+
+module.exports = {
+  node: 'current'
+};
