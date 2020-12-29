@@ -80,23 +80,22 @@ async function createRecord(args, metadata) {
     console.log("One or more required fields are missing. Please consult 'create -h'.")
     process.exit(1)
   } */
-  const payload = {"metadata" : metadata}
+  const payload = { "metadata": metadata }
   console.log(JSON.stringify(payload))
-  const options = { headers: {'Content-Type': "application/json"}, params: params }
-  const res = await axios.post(zenodoAPIUrl, JSON.stringify(payload), options )
-  .catch(function(error) {
-    axiosError(error)
-  });
+  const options = { headers: { 'Content-Type': "application/json" }, params: params }
+  const res = await axios.post(zenodoAPIUrl, JSON.stringify(payload), options)
+    .catch(function (error) {
+      axiosError(error)
+    });
   /*
   option to zenodo-cli --verbose
   if (verbose) {
     console.log(zenodoMessage(res.status))
   }
   */
-    return res.data;
+  return res.data;
 
-  }
-} 
+}
 
 function axiosError(error) {
   if (error.response) {
@@ -117,7 +116,7 @@ function axiosError(error) {
   }
   console.log(error.config);
   console.log(`Fatal error in create->axios.post: ${error}`);
-  process.exit(1);  
+  process.exit(1);
 };
 
 async function editDeposit(args, dep_id) {
@@ -133,9 +132,9 @@ async function editDeposit(args, dep_id) {
 async function updateRecord(args, dep_id, metadata) {
   console.log("\tUpdating record.");
   const { zenodoAPIUrl, params } = loadConfig(args.config);
-  const payload = {"metadata" : metadata}
-  const options = { headers: {'Content-Type': "application/json"}, params: params }
-  const res = await axios.put(`${zenodoAPIUrl}/${parseId(dep_id)}`, payload , options ).catch(function(error) {
+  const payload = { "metadata": metadata }
+  const options = { headers: { 'Content-Type': "application/json" }, params: params }
+  const res = await axios.put(`${zenodoAPIUrl}/${parseId(dep_id)}`, payload, options).catch(function (error) {
     axiosError(error)
   });
   return res.data;
@@ -416,7 +415,7 @@ export async function create(args) {
 
 // TODO
 function zenodoMessage(number) {
-  let errorMessage = "Did not understand error code: "+String(number)
+  let errorMessage = "Did not understand error code: " + String(number)
   const zenodoErrors = `Code	Name	Description
 200	OK	Request succeeded. Response included. Usually sent for GET/PUT/PATCH requests.
 201	Created	Request succeeded. Response included. Usually sent for POST requests.
