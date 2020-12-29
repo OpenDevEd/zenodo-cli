@@ -121,13 +121,8 @@ async function finalActions(args, id, deposit_url) {
 export async function saveIdsToJson(args) {
   let data, ids;
   ids = parseIds(args.id);
-  // Change to:
-  //ids.forEach(id => {
-  //  ...
-  //});
   ids.forEach( async function(id) {
     data = await getData(args, id);
-    console.log(data)
     let path = `${id}.json`;
     let buffer = Buffer.from(JSON.stringify(data["metadata"]));
     fs.open(path, 'w', function(err, fd) {
