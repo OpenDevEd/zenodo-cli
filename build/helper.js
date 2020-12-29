@@ -129,32 +129,33 @@ function updateMetadata(args, metadata) {
     if (("json" in args && args.json)) {
         if (fs.existsSync(args.json)) {
             const contents = fs.readFileSync(args.json, 'utf-8');
+            let metaIn = {};
             try {
-                let arr = JSON.parse(contents);
-                arr.forEach(function (key, value) {
-                    metadata[key] = value;
-                });
+                metaIn = JSON.parse(contents);
             }
             catch (e) {
                 console.log(`Invalid json: ${contents}`);
                 process.exit(1);
             }
+            Object.keys(metaIn).forEach(function (key) {
+                metadata[key] = metaIn[key];
+            });
         }
         else {
             console.log(`File does not exist: ${args.json}`);
             process.exit(1);
         }
     }
-    console.log(JSON.stringify(metadata));
-    process.exit(1);
-    if ("creators" in metadata) {
-        //TODO
-        let auth_arr = [];
-        let creators = metadata["creators"];
-        creators.forEach(creator => {
-            auth_arr.push(creator["name"]);
-        });
-        metadata["name"] = auth_arr.join(";");
+    if ("authors" in args && args.authors) {
+        let creatorsNew = [];
+        if ("creators" in metadata) {
+            creatorsNew = metadata["creators"];
+            let auth_arr = args.authors.split(/ *; */);
+            auth_arr.forEach(creator => {
+                creatorsNew.push({ name: creator });
+            });
+        }
+        metadata["creators"] = creatorsNew;
     }
     if ("title" in args && args.title) {
         metadata["title"] = args.title;
@@ -165,6 +166,8 @@ function updateMetadata(args, metadata) {
     if (("description" in args && args.description)) {
         metadata["description"] = args.description;
     }
+    console.log(JSON.stringify(metadata));
+    process.exit(1);
     if (("add_communites" in args && args.add_communites)) {
         let community_arr = [];
         let add_communites_arr = args.add_communities;

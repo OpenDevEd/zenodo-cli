@@ -19,18 +19,18 @@ export function in_es6(left, right) {
 
 export function loadConfig(configFile) {
   //console.log("load file checking ...")
-    if (fs.statSync(FALLBACK_CONFIG_FILE).isFile()) {
-      configFile = FALLBACK_CONFIG_FILE;
-      
-    } else {
-      console.log(`Config file not present at config.json or ${FALLBACK_CONFIG_FILE}`);
-      process.exit(1);
-    }
+  if (fs.statSync(FALLBACK_CONFIG_FILE).isFile()) {
+    configFile = FALLBACK_CONFIG_FILE;
+
+  } else {
+    console.log(`Config file not present at config.json or ${FALLBACK_CONFIG_FILE}`);
+    process.exit(1);
+  }
 
   const content = fs.readFileSync(configFile, "utf8");
   const config = JSON.parse(content);
 
-  const params = {"access_token": config["accessToken"]};
+  const params = { "access_token": config["accessToken"] };
 
   let zenodoAPIUrl = "";
   if ((config["env"] === "sandbox")) {
@@ -38,7 +38,7 @@ export function loadConfig(configFile) {
   } else {
     zenodoAPIUrl = "https://zenodo.org/api/deposit/depositions";
   }
-  return {params, zenodoAPIUrl}
+  return { params, zenodoAPIUrl }
 }
 
 export function parseId(id) {
@@ -108,38 +108,34 @@ export function updateMetadata(args, metadata) {
   // If the --json argument is given, load the file, and overwrite metadata accordingly.
   if (("json" in args && args.json)) {
     if (fs.existsSync(args.json)) {
-      const contents = fs.readFileSync(args.json,'utf-8')       
+      const contents = fs.readFileSync(args.json, 'utf-8')
+      let metaIn = {}
       try {
-
-        let arr = JSON.parse(contents);
-        arr.forEach(function(key,value){
-          metadata[key] = value
-        });
-            
+        metaIn = JSON.parse(contents);
       } catch (e) {
         console.log(`Invalid json: ${contents}`)
         process.exit(1);
       }
-      
+      Object.keys(metaIn).forEach(function (key) {
+        metadata[key] = metaIn[key]
+      });
     } else {
       console.log(`File does not exist: ${args.json}`)
       process.exit(1);
-    }     
+    }
   }
-  console.log(JSON.stringify(metadata))
-  process.exit(1);
-  if ("creators" in metadata) {
-//TODO
-    let auth_arr = [];
-    let creators = metadata["creators"];
-    creators.forEach(creator => {
-        auth_arr.push(creator["name"]);
+  if ("authors" in args && args.authors) {
+    let creatorsNew = []
+    if ("creators" in metadata) {
+      creatorsNew = metadata["creators"]
+      let auth_arr = args.authors.split(/ *; */);
+      auth_arr.forEach(creator => {
+        creatorsNew.push({ name: creator});
       });
-    metadata["name"] = auth_arr.join(";");
-
+    }
+    metadata["creators"] = creatorsNew
   }
-
-  if ( "title" in args && args.title) {
+  if ("title" in args && args.title) {
     metadata["title"] = args.title;
   }
   if (("date" in args && args.date)) {
@@ -148,75 +144,77 @@ export function updateMetadata(args, metadata) {
   if (("description" in args && args.description)) {
     metadata["description"] = args.description;
   }
-  if (("add_communites" in args && args.add_communites)) {
 
+  if (("add_communites" in args && args.add_communites)) {
     let community_arr = [];
     let add_communites_arr = args.add_communities;
     add_communites_arr.forEach(community => {
-        community_arr.push({"identifier": community});
-      });
-     
+      community_arr.push({ "identifier": community });
+    });
+
     metadata["communities"] = community_arr.join(";");
   }
+  console.log(JSON.stringify(metadata))
+  process.exit(1);
 
   if (("remove_communities" in args && args.remove_communities)) {
 
     let communities_arr = [];
     let metadataCommunities = metadata["communities"];
-   
+
     metadataCommunities.forEach(community => {
-        if (!(community in args.remove_communities)) {
-          communities_arr.push({"identifier": community});
-        }              
-      });
-     
-    metadata["communities"] = communities_arr.join(";");      
+      if (!(community in args.remove_communities)) {
+        communities_arr.push({ "identifier": community });
+      }
+    });
+
+    metadata["communities"] = communities_arr.join(";");
   }
 
   if (("communities" in args && args.communities)) {
     comm = open(args.communities);
     metadata["communities"] = function () {
-    let  comm_arr = [], comm_data_arr = comm.read().splitlines();   
-    comm_data_arr.forEach(community => {
-          comm_arr.push({"identifier": community});
-          return comm_arr;
-        });
+      let comm_arr = [], comm_data_arr = comm.read().splitlines();
+      comm_data_arr.forEach(community => {
+        comm_arr.push({ "identifier": community });
+        return comm_arr;
+      });
     }
-    .call(this);
+      .call(this);
     comm.close();
   }
   if (("authordata" in args && args.authordata)) {
     author_data_fp = open(args.authordata);
     let autherReadData = author_data_fp.read().splitlines()
     autherReadData.forEach(author_data => {
-        if (author_data.strip()) {
-          creator = author_data.split("\t");
-          author_data_dict["name"] = {"name": creator[0], "affiliation": creator[1], "orcid": creator[2]};
-        }       
-      });
-      
+      if (author_data.strip()) {
+        creator = author_data.split("\t");
+        author_data_dict["name"] = { "name": creator[0], "affiliation": creator[1], "orcid": creator[2] };
+      }
+    });
+
     author_data_fp.close();
   }
   if (("authors" in args && args.authors)) {
     metadata["creators"] = [];
     let authersData = args.authors.split(";")
-     authersData.forEach(author => {
-        author_info = author_data_dict.get(author, null);
-        metadata["creators"].append({
-          "name": author,
-          "affiliation": (author_info ? author_info["affiliation"] : ""),
-          "orcid": (author_info ? author_info["orcid"] : "")
-        });
-        
+    authersData.forEach(author => {
+      author_info = author_data_dict.get(author, null);
+      metadata["creators"].append({
+        "name": author,
+        "affiliation": (author_info ? author_info["affiliation"] : ""),
+        "orcid": (author_info ? author_info["orcid"] : "")
       });
-    
+
+    });
+
   }
   /*
   in_es6\((".*"), *args\)
   $1 in args
   */
   if (("zotero_link" in args && args.zotero_link)) {
-       metadata["related_identifiers"] = [{
+    metadata["related_identifiers"] = [{
       "identifier": args.zotero_link,
       "relation": "isAlternateIdentifier",
       "resource_type": "other",

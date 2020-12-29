@@ -89,9 +89,18 @@ parser_create.add_argument("--description", {
 });
 parser_create.add_argument("--communities", {
   "action": "store",
-  "help": "List of communities for the record (comma-separated). Overrides data provided via --json."
+  "help": "Read list of communities for the record from a file. Overrides data provided via --json."
 });
-parser_create.add_argument("--add-communities", {"nargs": "*"});
+parser_create.add_argument("--add-communities", {
+  "nargs": "*",
+  "action": "store",  
+  "help": "List of communities to be added to the record (provided on the command line, one by one). Overrides data provided via --json."
+});
+parser_create.add_argument("--remove-communities", {
+  "nargs": "*",
+  "action": "store",  
+  "help": "List of communities to be removed from the record (provided on the command line, one by one). Overrides data provided via --json."
+});
 parser_create.add_argument("--authors", {
   "action": "store",
   "help": "List of authors, separated with semicolon. Do not provide institution/ORCID. Instead, these can be supplied using --authordata. Overrides data provided via --json."
