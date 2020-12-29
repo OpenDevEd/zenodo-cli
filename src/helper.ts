@@ -103,7 +103,7 @@ export function parseIds(genericIds) {
 export function updateMetadata(args, metadata) {
   // This function takes an existing object (metadata) and applies changes indicated by args.
   console.log("Updating metadata")
-  let authorInformationDict, author_data_fp, author_info, authorInfo;
+  let authorInformationDict, authorInfo;
   authorInformationDict = {};
   // If the --json argument is given, load the file, and overwrite metadata accordingly.
   if (("json" in args && args.json)) {
@@ -159,11 +159,12 @@ export function updateMetadata(args, metadata) {
         if (entry.length >= 1 && entry[1] != "") {
           newentry["institution"] = entry[1]
         } else if (authorInformationDict[entry[0]]) {
+          // Excercise left to the developer: Why do we not need to write && "institution" in authorInformationDict[entry[0]] ?
           newentry = authorInformationDict[entry[0]]
         }
         if (entry.length >= 2) {
           newentry["orcid"] = entry[2]
-        } else if (authorInformationDict[entry[0]]) {
+        } else if (authorInformationDict[entry[0]] && "orcid" in authorInformationDict[entry[0]]) {
           newentry["orcid"] = authorInformationDict[entry[0]]["orcid"]
         }
         creatorsNew.push(newentry);
