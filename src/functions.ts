@@ -2,6 +2,7 @@ import axios from 'axios';
 import * as fs from "fs";
 import opn from 'opn';
 
+
 import {
   dumpJSON,
   loadConfig,
@@ -60,12 +61,43 @@ async function getMetadata(args, id) {
 async function createRecord(args, metadata) {
   console.log("\tCreating record.");
   const {zenodoAPIUrl, params} = loadConfig(args.config);
-  const res = await axios.post(zenodoAPIUrl, {"json": {"metadata": metadata}, "params": params});
-  if ((res.status !== 201)) {
-    console.log(`Error in creating new record: ${res.data}`);
-    process.exit(1);
+  // At present, the file blank.json is used as a default, therefore the checks below will pass.
+  // However, blank.json does not contain a date, therefore, we have to supply the date if it is empty.
+  if (! ("date" in metadata) || metadata["date"].length === 0) {
+    console.log("Using today's date.")
+    // TODO - replace string 2020-12-29 with todays date... new date("%Y-%m-%d")
+    metadata["date"] = "2020-12-29"
   }
-  return res.data;
+  const requiredMetadataFields = ["title", "date", "description", "authors"]
+  var raiseErrorMissingMetadata = false
+  requiredMetadataFields.forEach(metadatafield => {
+    if (! (metadatafield in metadata)) {
+      console.log(`To create a new record, you need to supply the ${metadatafield}.`);
+      raiseErrorMissingMetadata = true
+    } else {
+      console.log(`Go to ${metadatafield} = ${metadata[metadatafield]}`)
+    }
+  });
+  if (raiseErrorMissingMetadata) {
+    console.log("One or more required fields are missing. Please consult 'create -h'.")
+    process.exit(1)
+  }
+  try {
+    const res = await axios.post(zenodoAPIUrl, {"json": {"metadata": metadata}, "params": params});
+    if (res.status == 401) {
+      console.log(`Error in creating new record (401): ${res.data}`);
+      process.exit(1);
+    } else if ((res.status !== 201)) {
+      console.log(`Error in creating new record (other than 401): ${res.data}`);
+      process.exit(1);      
+    } else {
+      // Success: res.status == 201
+      return res.data;
+    }
+  } 
+  catch (e) {
+    console.log(`An error occurred in createRecord: ${e}`)
+  }
 }
 
 async function editDeposit(args, dep_id) {
@@ -301,8 +333,6 @@ export async function concept(args) {
   if ("dump" in args && args.dump) {
     dumpJSON(res.data);
   }
-  // TODO
-  // res.data.forEach(dep)
   res.data.forEach(async function(dep) {
     console.log(dep["record_id"], dep["conceptrecid"]);
     // TODO replace what's below with finalactions.
