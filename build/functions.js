@@ -77,28 +77,27 @@ async function createRecord(args, metadata) {
     console.log("\tCreating record.");
     const { zenodoAPIUrl, params } = helper_1.loadConfig(args.config);
     //console.log(`URI:    ${zenodoAPIUrl}`)
-    //console.log(`params: ${JSON.stringify(params)}`)
-    const zenodoAPIUrlWithToken = zenodoAPIUrl + "?access_token=" + params["access_token"];
+    //const zenodoAPIUrlWithToken = zenodoAPIUrl+"?access_token="+params["access_token"]
     // At present, the file blank.json is used as a default, therefore the checks below will pass.
     // However, blank.json does not contain a date - Zenodo will use todays date
-    const requiredMetadataFields = ["title", "description", "authors"];
-    var raiseErrorMissingMetadata = false;
+    /* const requiredMetadataFields = ["title", "description", "authors"]
+    var raiseErrorMissingMetadata = false
     requiredMetadataFields.forEach(metadatafield => {
-        if (!(metadatafield in metadata)) {
-            console.log(`To create a new record, you need to supply the ${metadatafield}.`);
-            raiseErrorMissingMetadata = true;
-        }
-        else {
-            console.log(`Go to ${metadatafield} = ${metadata[metadatafield]}`);
-        }
+      if (!(metadatafield in metadata)) {
+        console.log(`To create a new record, you need to supply the ${metadatafield}.`);
+        raiseErrorMissingMetadata = true
+      } else {
+        console.log(`Go to ${metadatafield} = ${metadata[metadatafield]}`)
+      }
     });
     if (raiseErrorMissingMetadata) {
-        console.log("One or more required fields are missing. Please consult 'create -h'.");
-        process.exit(1);
-    }
+      console.log("One or more required fields are missing. Please consult 'create -h'.")
+      process.exit(1)
+    } */
     const payload = { "metadata": metadata };
-    const options = { headers: { 'Content-Type': "application/json" } };
-    const res = await axios_1.default.post(zenodoAPIUrlWithToken, JSON.stringify(payload), options)
+    console.log(JSON.stringify(payload));
+    const options = { headers: { 'Content-Type': "application/json" }, params: params };
+    const res = await axios_1.default.post(zenodoAPIUrl, JSON.stringify(payload), options)
         .catch(function (error) {
         if (error.response) {
             // The request was made and the server responded with a status code

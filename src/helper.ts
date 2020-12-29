@@ -110,14 +110,13 @@ export function updateMetadata(args, metadata) {
     meta_file.close();
   }
   if ("creators" in metadata) {
-
+//TODO
     var _pj_auth = [], _pj_b = metadata["creators"];
     for (var _pj_c = 0, _pj_d = _pj_b.length; (_pj_c < _pj_d); _pj_c += 1) {
       var creator = _pj_b[_pj_c];
       _pj_auth.push(creator["name"]);
     }
-
-    metadata["authors"] = _pj_auth.join(";");
+    metadata["name"] = _pj_auth.join(";");
 
   }
 

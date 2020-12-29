@@ -62,8 +62,7 @@ async function createRecord(args, metadata) {
   console.log("\tCreating record.");
   const { zenodoAPIUrl, params } = loadConfig(args.config);
   //console.log(`URI:    ${zenodoAPIUrl}`)
-  //console.log(`params: ${JSON.stringify(params)}`)
-  const zenodoAPIUrlWithToken = zenodoAPIUrl+"?access_token="+params["access_token"]
+  //const zenodoAPIUrlWithToken = zenodoAPIUrl+"?access_token="+params["access_token"]
 
   // At present, the file blank.json is used as a default, therefore the checks below will pass.
   // However, blank.json does not contain a date - Zenodo will use todays date
@@ -82,8 +81,9 @@ async function createRecord(args, metadata) {
     process.exit(1)
   } */
   const payload = {"metadata" : metadata}
-  const options = { headers: {'Content-Type': "application/json"} }
-  const res = await axios.post(zenodoAPIUrlWithToken, JSON.stringify(payload), options )
+  console.log(JSON.stringify(payload))
+  const options = { headers: {'Content-Type': "application/json"}, params: params }
+  const res = await axios.post(zenodoAPIUrl, JSON.stringify(payload), options )
   .catch(function (error) {
     if (error.response) {
       // The request was made and the server responded with a status code
