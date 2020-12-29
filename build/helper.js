@@ -123,8 +123,8 @@ exports.parseIds = parseIds;
 function updateMetadata(args, metadata) {
     // This function takes an existing object (metadata) and applies changes indicated by args.
     console.log("Updating metadata");
-    let author_data_dict, author_data_fp, author_info, creator;
-    author_data_dict = {};
+    let authorInformationDict, author_data_fp, author_info, authorInfo;
+    authorInformationDict = {};
     // If the --json argument is given, load the file, and overwrite metadata accordingly.
     if (("json" in args && args.json)) {
         if (fs.existsSync(args.json)) {
@@ -146,6 +146,32 @@ function updateMetadata(args, metadata) {
             process.exit(1);
         }
     }
+    // Process authors
+    // Step 1. Read author information from file
+    if (("authordata" in args && args.authordata)) {
+        if (fs.existsSync(args.authordata)) {
+            const authFile = fs.readFileSync(args.authordata, 'utf-8');
+            let autherData = authFile.split(/\n/);
+            autherData.forEach(line => {
+                if (line) {
+                    authorInfo = line.split("\t");
+                    if (authorInfo.length >= 1) {
+                        authorInformationDict[authorInfo[0]] = { "name": authorInfo[0] };
+                    }
+                    else if (authorInfo.length >= 2) {
+                        authorInformationDict[authorInfo[0]] = { "name": authorInfo[0], "affiliation": authorInfo[1] };
+                    }
+                    else if (authorInfo.length >= 3) {
+                        authorInformationDict[authorInfo[0]] = { "name": authorInfo[0], "affiliation": authorInfo[1], "orcid": authorInfo[2] };
+                    }
+                }
+            });
+        }
+        else {
+            console.log(`ERROR, file missing ${args.authordata}`);
+        }
+    }
+    // Step 2. Collect authors
     if ("authors" in args && args.authors) {
         let creatorsNew = [];
         if ("creators" in metadata) {
@@ -155,11 +181,17 @@ function updateMetadata(args, metadata) {
                 const entry = creator.split(/ *; */);
                 let newentry = {};
                 newentry["name"] = entry[0];
-                if (entry.length > 1) {
+                if (entry.length >= 1 && entry[1] != "") {
                     newentry["institution"] = entry[1];
                 }
-                if (entry.length > 2) {
+                else if (authorInformationDict[entry[0]]) {
+                    newentry = authorInformationDict[entry[0]];
+                }
+                if (entry.length >= 2) {
                     newentry["orcid"] = entry[2];
+                }
+                else if (authorInformationDict[entry[0]]) {
+                    newentry["orcid"] = authorInformationDict[entry[0]]["orcid"];
                 }
                 creatorsNew.push(newentry);
             });
@@ -211,48 +243,22 @@ function updateMetadata(args, metadata) {
         }
     });
     metadata["communities"] = communitiesArrayFinal;
-    console.log(`Arr now: ${JSON.stringify(communitiesArrayFinal)}`);
     // Done with communities
-    console.log(JSON.stringify(metadata));
-    process.exit(1);
-    if (("authordata" in args && args.authordata)) {
-        author_data_fp = open(args.authordata);
-        let autherReadData = author_data_fp.read().splitlines();
-        autherReadData.forEach(author_data => {
-            if (author_data.strip()) {
-                creator = author_data.split("\t");
-                author_data_dict["name"] = { "name": creator[0], "affiliation": creator[1], "orcid": creator[2] };
-            }
-        });
-        author_data_fp.close();
-    }
-    if (("authors" in args && args.authors)) {
-        metadata["creators"] = [];
-        let authersData = args.authors.split(";");
-        authersData.forEach(author => {
-            author_info = author_data_dict.get(author, null);
-            metadata["creators"].append({
-                "name": author,
-                "affiliation": (author_info ? author_info["affiliation"] : ""),
-                "orcid": (author_info ? author_info["orcid"] : "")
-            });
-        });
-    }
-    /*
-    in_es6\((".*"), *args\)
-    $1 in args
-    */
-    if (("zotero_link" in args && args.zotero_link)) {
-        metadata["related_identifiers"] = [{
-                "identifier": args.zotero_link,
-                "relation": "isAlternateIdentifier",
-                "resource_type": "other",
-                "scheme": "url"
-            }];
-    }
-    return metadata;
 }
 exports.updateMetadata = updateMetadata;
+/*
+in_es6\((".*"), *args\)
+$1 in args
+*/
+if (("zotero_link" in args && args.zotero_link)) {
+    metadata["related_identifiers"] = [{
+            "identifier": args.zotero_link,
+            "relation": "isAlternateIdentifier",
+            "resource_type": "other",
+            "scheme": "url"
+        }];
+}
+return metadata;
 /*
 
 {

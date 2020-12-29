@@ -218,22 +218,19 @@ export function updateMetadata(args, metadata) {
   })
   metadata["communities"] = communitiesArrayFinal;
   // Done with communities
-
-
-}
-/*
-in_es6\((".*"), *args\)
-$1 in args
-*/
-if (("zotero_link" in args && args.zotero_link)) {
-  metadata["related_identifiers"] = [{
-    "identifier": args.zotero_link,
-    "relation": "isAlternateIdentifier",
-    "resource_type": "other",
-    "scheme": "url"
-  }];
-}
-return metadata;
+  /*
+  in_es6\((".*"), *args\)
+  $1 in args
+  */
+  if (("zotero_link" in args && args.zotero_link)) {
+    metadata["related_identifiers"] = [{
+      "identifier": args.zotero_link,
+      "relation": "isAlternateIdentifier",
+      "resource_type": "other",
+      "scheme": "url"
+    }];
+  }
+  return metadata;
 }
 
 /*
