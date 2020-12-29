@@ -14,8 +14,8 @@ import {
 
 async function publishDeposition(args, id) {
   id = parseId(id);
-  const {zenodoAPIUrl, params} = loadConfig(args.config);
-  const res = await axios.post(`${zenodoAPIUrl}/${id}/actions/publish`, {"params": params});
+  const { zenodoAPIUrl, params } = loadConfig(args.config);
+  const res = await axios.post(`${zenodoAPIUrl}/${id}/actions/publish`, { "params": params });
   if ((res.data !== 202)) {
     console.log(`Error in publshing deposition ${id}: `, res.data);
   } else {
@@ -29,10 +29,10 @@ async function showDeposition(args, id) {
 }
 
 async function getData(args, id) {
-  const {zenodoAPIUrl, params} = loadConfig(args.config);
+  const { zenodoAPIUrl, params } = loadConfig(args.config);
   console.log(`getting data`);
   id = parseId(id);
-  let res = await axios.get(`${zenodoAPIUrl}/${id}`, {"params": params});
+  let res = await axios.get(`${zenodoAPIUrl}/${id}`, { "params": params });
   if ((res.status !== 200)) {
     if ((res.status["status"] !== 404)) {
       console.log(`Error in getting data: ${res.data}`);
@@ -41,7 +41,7 @@ async function getData(args, id) {
       console.log("Checking helper ID.");
       const listParams = params;
       listParams["q"] = ("conceptrecid:" + id);
-      res = await axios.get(zenodoAPIUrl, {"params": listParams});
+      res = await axios.get(zenodoAPIUrl, { "params": listParams });
       if ((res.status !== 200)) {
         console.log(`Failed in getting data: ${res.data}`);
       } else {
@@ -60,10 +60,14 @@ async function getMetadata(args, id) {
 
 async function createRecord(args, metadata) {
   console.log("\tCreating record.");
-  const {zenodoAPIUrl, params} = loadConfig(args.config);
+  const { zenodoAPIUrl, params } = loadConfig(args.config);
+  //console.log(`URI:    ${zenodoAPIUrl}`)
+  //console.log(`params: ${JSON.stringify(params)}`)
+  const zenodoAPIUrlWithToken = zenodoAPIUrl+"?access_token="+params["access_token"]
+
   // At present, the file blank.json is used as a default, therefore the checks below will pass.
   // However, blank.json does not contain a date, therefore, we have to supply the date if it is empty.
-  if (! ("date" in metadata) || metadata["date"].length === 0) {
+  if (!("date" in metadata) || metadata["date"].length === 0) {
     console.log("Using today's date.")
     // TODO - replace string 2020-12-29 with todays date... new date("%Y-%m-%d")
     metadata["date"] = "2020-12-29"
@@ -71,7 +75,7 @@ async function createRecord(args, metadata) {
   const requiredMetadataFields = ["title", "date", "description", "authors"]
   var raiseErrorMissingMetadata = false
   requiredMetadataFields.forEach(metadatafield => {
-    if (! (metadatafield in metadata)) {
+    if (!(metadatafield in metadata)) {
       console.log(`To create a new record, you need to supply the ${metadatafield}.`);
       raiseErrorMissingMetadata = true
     } else {
@@ -82,27 +86,44 @@ async function createRecord(args, metadata) {
     console.log("One or more required fields are missing. Please consult 'create -h'.")
     process.exit(1)
   }
-  try {
-    const res = await axios.post(zenodoAPIUrl, {"json": {"metadata": metadata}, "params": params});
-    if (res.status == 401) {
-      console.log(`Error in creating new record (401): ${res.data}`);
-      process.exit(1);
-    } else if ((res.status !== 201)) {
-      console.log(`Error in creating new record (other than 401): ${res.data}`);
-      process.exit(1);      
+  const payload = {"metadata" : metadata}
+  const options = { headers: {'Content-Type': "application/json"} }
+  const res = await axios.post(zenodoAPIUrlWithToken, JSON.stringify(payload), options )
+  .catch(function (error) {
+    if (error.response) {
+      // The request was made and the server responded with a status code
+      // that falls out of the range of 2xx
+      console.log(error.response.data);
+      console.log(error.response.status);
+      console.log(error.response.headers);
+    } else if (error.request) {
+      // The request was made but no response was received
+      // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
+      // http.ClientRequest in node.js
+      console.log(error.request);
     } else {
-      // Success: res.status == 201
-      return res.data;
+      // Something happened in setting up the request that triggered an Error
+      console.log('Error', error.message);
     }
-  } 
-  catch (e) {
-    console.log(`An error occurred in createRecord: ${e}`)
+    console.log(error.config);
+    console.log(`Fatal error in create->axios.post: ${error}`);
+    process.exit(1);  
+  });
+  if ((res.status !== 201)) {
+    console.log(`Error in creating new record (other than 201): ${res.data}`);
+    console.log("List of error codes: https://developers.zenodo.org/?shell#http-status-codes");
+    console.log("Response was: " + JSON.stringify(res))
+    process.exit(1);
+  } else {
+    // Success: res.status == 201
+    return res.data;
   }
-}
+} 
+
 
 async function editDeposit(args, dep_id) {
-  const {zenodoAPIUrl, params} = loadConfig(args.config);
-  const res = await axios.post(`${zenodoAPIUrl}/${parseId(dep_id)}/actions/edit`, {"params": params});
+  const { zenodoAPIUrl, params } = loadConfig(args.config);
+  const res = await axios.post(`${zenodoAPIUrl}/${parseId(dep_id)}/actions/edit`, { "params": params });
   if ((res.status !== 201)) {
     console.log(`Error in making record editable. ${res.data}`);
     process.exit(1);
@@ -112,8 +133,8 @@ async function editDeposit(args, dep_id) {
 
 async function updateRecord(args, dep_id, metadata) {
   console.log("\tUpdating record.");
-  const {zenodoAPIUrl, params} = loadConfig(args.config);
-  const res = await axios.put(`${zenodoAPIUrl}/${parseId(dep_id)}`, {"json": {"metadata": metadata}, "params": params});
+  const { zenodoAPIUrl, params } = loadConfig(args.config);
+  const res = await axios.put(`${zenodoAPIUrl}/${parseId(dep_id)}`, { "json": { "metadata": metadata }, "params": params });
   if ((res.status !== 200)) {
     console.log(`Error in updating record. ${res.data}`);
     process.exit(1);
@@ -122,11 +143,11 @@ async function updateRecord(args, dep_id, metadata) {
 }
 
 async function fileUpload(args, bucket_url, journal_filepath) {
-  const {params} = loadConfig(args.config);
+  const { params } = loadConfig(args.config);
   console.log("\tUploading file.");
   const replaced = journal_filepath.replace("^.*\\/", "");
   const data = fs.readFileSync(journal_filepath, "utf8");
-  const res = await axios.put(((bucket_url + "/") + replaced), {"data": data, "params": params});
+  const res = await axios.put(((bucket_url + "/") + replaced), { "data": data, "params": params });
   if ((res.status !== 200)) {
     process.exit(res.data);
   }
@@ -153,20 +174,20 @@ async function finalActions(args, id, deposit_url) {
 export async function saveIdsToJson(args) {
   let data, ids;
   ids = parseIds(args.id);
-  ids.forEach( async function(id) {
+  ids.forEach(async function (id) {
     data = await getData(args, id);
     let path = `${id}.json`;
     let buffer = Buffer.from(JSON.stringify(data["metadata"]));
-    fs.open(path, 'w', function(err, fd) {
+    fs.open(path, 'w', function (err, fd) {
       if (err) {
-          throw 'could not open file: ' + err;
+        throw 'could not open file: ' + err;
       }
       // write the contents of the buffer, from position 0 to the end, to the file descriptor returned in opening our file
-      fs.write(fd, buffer, 0, buffer.length, null, function(err) {
-          if (err) throw 'error writing file: ' + err;
-          fs.close(fd, function() {
-              console.log('wrote the file successfully');
-          });
+      fs.write(fd, buffer, 0, buffer.length, null, function (err) {
+        if (err) throw 'error writing file: ' + err;
+        fs.close(fd, function () {
+          console.log('wrote the file successfully');
+        });
       });
     });
     await finalActions(args, id, data["links"]["html"]);
@@ -188,8 +209,7 @@ export async function duplicate(args) {
   bucket_url = response_data["links"]["bucket"];
   deposit_url = response_data["links"]["html"];
   if (args.files) {
-    // TODO
-    args.files.forEach( async function(filePath) {
+    args.files.forEach(async function (filePath) {
       await fileUpload(args, bucket_url, filePath);
     })
   }
@@ -209,7 +229,7 @@ export async function upload(args) {
     }
   }
   if (bucket_url) {
-    args.files.forEach( async function(filePath) {
+    args.files.forEach(async function (filePath) {
       await fileUpload(args, bucket_url, filePath);
     })
     await finalActions(args, args.id, deposit_url);
@@ -233,7 +253,7 @@ export async function update(args) {
   bucket_url = response_data["links"]["bucket"];
   deposit_url = response_data["links"]["html"];
   if (args.files) {
-    args.files.forEach( async function(filePath) {
+    args.files.forEach(async function (filePath) {
       await fileUpload(args, bucket_url, filePath);
     })
   }
@@ -246,7 +266,7 @@ export async function copy(args) {
   delete metadata["doi"];
   delete metadata["prereserve_doi"];
   var arr = args.files
-  arr.forEach(async function(journal_filepath) { 
+  arr.forEach(async function (journal_filepath) {
     console.log(("Processing: " + journal_filepath));
     response_data = await createRecord(args, metadata);
     bucket_url = response_data["links"]["bucket"];
@@ -256,10 +276,10 @@ export async function copy(args) {
 }
 
 export async function listDepositions(args) {
-  const {zenodoAPIUrl, params} = loadConfig(args.config);
+  const { zenodoAPIUrl, params } = loadConfig(args.config);
   params["page"] = args.page;
   params["size"] = (args.size ? args.size : 1000);
-  const res = await axios.get(zenodoAPIUrl, {params});
+  const res = await axios.get(zenodoAPIUrl, { params });
   if ((res.status !== 200)) {
     console.log(`Failed in listDepositions: ${res.data}`);
     process.exit(1);
@@ -268,21 +288,30 @@ export async function listDepositions(args) {
     dumpJSON(res.data);
   }
   if ("publish" in args && args.publish) {
-    console.log("Warning: using 'list' with '--publish' means that all of your depositions will be published. Please confirm by typing yes."); 
+    console.log("Warning: using 'list' with '--publish' means that all of your depositions will be published. Please confirm by typing yes.");
     // TODO
-    // Capture user input. If yser types yes, continue. If user types anything else, then abort.   
+    // Capture user input. If yser types yes, continue. If user types anything else, then abort.  
+    /* 
+    var stdin = process.openStdin();
+    stdin.addListener("data", function(d) {
+      // note:  d is an object, and when converted to a string it will
+      // end with a linefeed.  so we (rather crudely) account for that  
+      // with toString() and then substring() 
+      console.log("you entered: [" + d.toString().trim() + "]");
+    }); 
+    */
   }
   var arr = res.data
-  arr.forEach( async function(dep){
+  arr.forEach(async function (dep) {
     console.log(dep["record_id"], dep["conceptrecid"]);
     await finalActions(args, dep["id"], dep["links"]["html"]);
-   });
+  });
 }
 
 export async function newVersion(args) {
-  const {zenodoAPIUrl, params} = loadConfig(args.config);
+  const { zenodoAPIUrl, params } = loadConfig(args.config);
   const id = parseId(args.id[0]);
-  const response = await axios.post(`${zenodoAPIUrl}/${id}/actions/newversion`, {"params": params});
+  const response = await axios.post(`${zenodoAPIUrl}/${id}/actions/newversion`, { "params": params });
   if ((response.status !== 201)) {
     console.log(`New version request failed:`, response.data);
     process.exit(1);
@@ -296,7 +325,7 @@ export async function newVersion(args) {
   const bucket_url = response_data["links"]["bucket"];
   const deposit_url = response_data["links"]["latest_html"];
   if (args.files) {
-    args.files.forEach(async function(filePath) {
+    args.files.forEach(async function (filePath) {
       await fileUpload(args, bucket_url, filePath);
     })
   }
@@ -308,11 +337,11 @@ export async function download(args) {
   var data, fp, id, name;
   id = parseId(args.id[0]);
   data = await getData(args, id);
-  const {params} = loadConfig(args.config);
-  data["files"].forEach(async function(fileObj) {
+  const { params } = loadConfig(args.config);
+  data["files"].forEach(async function (fileObj) {
     name = fileObj["filename"];
     console.log(`Downloading ${name}`);
-    const res = await axios.get(fileObj["links"]["download"], {"params": params});
+    const res = await axios.get(fileObj["links"]["download"], { "params": params });
     fp = open(name, "wb+");
     fp.write(res.data);
     fp.close();
@@ -323,9 +352,9 @@ export async function download(args) {
 }
 
 export async function concept(args) {
-  const {zenodoAPIUrl, params} = loadConfig(args.config);
+  const { zenodoAPIUrl, params } = loadConfig(args.config);
   params["q"] = `conceptrecid:${parseId(args.id[0])}`;
-  const res = await axios.get(zenodoAPIUrl, {"params": params});
+  const res = await axios.get(zenodoAPIUrl, { "params": params });
   if ((res.status !== 200)) {
     console.log(`Failed in concept(args): `, res.data);
     process.exit(1);
@@ -333,7 +362,7 @@ export async function concept(args) {
   if ("dump" in args && args.dump) {
     dumpJSON(res.data);
   }
-  res.data.forEach(async function(dep) {
+  res.data.forEach(async function (dep) {
     console.log(dep["record_id"], dep["conceptrecid"]);
     // TODO replace what's below with finalactions.
     if ("publish" in args && args.publish) {
@@ -342,7 +371,7 @@ export async function concept(args) {
     if ("show" in args && args.show) {
       showDepositionJSON(dep);
     }
-    if ( "open" in args && args.open) {
+    if ("open" in args && args.open) {
       opn(dep["links"]["html"]);
     }
   })
@@ -350,9 +379,13 @@ export async function concept(args) {
 
 
 export async function create(args) {
-  const f = fs.readFileSync("blank.json", {encoding: 'utf8'});
+  const f = fs.readFileSync("blank.json", { encoding: 'utf8' });
   const metadata = updateMetadata(args, JSON.parse(f));
   const response_data = await createRecord(args, metadata);
   console.log(response_data)
-  await finalActions(args, response_data["id"], response_data["links"]["html"]);
+  if (response_data) {
+    await finalActions(args, response_data["id"], response_data["links"]["html"]);
+  } else {
+    console.log("Record creation failed.")
+  }
 }

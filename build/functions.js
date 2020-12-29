@@ -76,6 +76,9 @@ async function getMetadata(args, id) {
 async function createRecord(args, metadata) {
     console.log("\tCreating record.");
     const { zenodoAPIUrl, params } = helper_1.loadConfig(args.config);
+    //console.log(`URI:    ${zenodoAPIUrl}`)
+    //console.log(`params: ${JSON.stringify(params)}`)
+    const zenodoAPIUrlWithToken = zenodoAPIUrl + "?access_token=" + params["access_token"];
     // At present, the file blank.json is used as a default, therefore the checks below will pass.
     // However, blank.json does not contain a date, therefore, we have to supply the date if it is empty.
     if (!("date" in metadata) || metadata["date"].length === 0) {
@@ -98,23 +101,40 @@ async function createRecord(args, metadata) {
         console.log("One or more required fields are missing. Please consult 'create -h'.");
         process.exit(1);
     }
-    try {
-        const res = await axios_1.default.post(zenodoAPIUrl, { "json": { "metadata": metadata }, "params": params });
-        if (res.status == 401) {
-            console.log(`Error in creating new record (401): ${res.data}`);
-            process.exit(1);
+    const payload = { "metadata": metadata };
+    const options = { headers: { 'Content-Type': "application/json" } };
+    const res = await axios_1.default.post(zenodoAPIUrlWithToken, JSON.stringify(payload), options)
+        .catch(function (error) {
+        if (error.response) {
+            // The request was made and the server responded with a status code
+            // that falls out of the range of 2xx
+            console.log(error.response.data);
+            console.log(error.response.status);
+            console.log(error.response.headers);
         }
-        else if ((res.status !== 201)) {
-            console.log(`Error in creating new record (other than 401): ${res.data}`);
-            process.exit(1);
+        else if (error.request) {
+            // The request was made but no response was received
+            // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
+            // http.ClientRequest in node.js
+            console.log(error.request);
         }
         else {
-            // Success: res.status == 201
-            return res.data;
+            // Something happened in setting up the request that triggered an Error
+            console.log('Error', error.message);
         }
+        console.log(error.config);
+        console.log(`Fatal error in create->axios.post: ${error}`);
+        process.exit(1);
+    });
+    if ((res.status !== 201)) {
+        console.log(`Error in creating new record (other than 201): ${res.data}`);
+        console.log("List of error codes: https://developers.zenodo.org/?shell#http-status-codes");
+        console.log("Response was: " + JSON.stringify(res));
+        process.exit(1);
     }
-    catch (e) {
-        console.log(`An error occurred in createRecord: ${e}`);
+    else {
+        // Success: res.status == 201
+        return res.data;
     }
 }
 async function editDeposit(args, dep_id) {
@@ -202,7 +222,6 @@ async function duplicate(args) {
     bucket_url = response_data["links"]["bucket"];
     deposit_url = response_data["links"]["html"];
     if (args.files) {
-        // TODO
         args.files.forEach(async function (filePath) {
             await fileUpload(args, bucket_url, filePath);
         });
@@ -287,7 +306,16 @@ async function listDepositions(args) {
     if ("publish" in args && args.publish) {
         console.log("Warning: using 'list' with '--publish' means that all of your depositions will be published. Please confirm by typing yes.");
         // TODO
-        // Capture user input. If yser types yes, continue. If user types anything else, then abort.   
+        // Capture user input. If yser types yes, continue. If user types anything else, then abort.  
+        /*
+        var stdin = process.openStdin();
+        stdin.addListener("data", function(d) {
+          // note:  d is an object, and when converted to a string it will
+          // end with a linefeed.  so we (rather crudely) account for that
+          // with toString() and then substring()
+          console.log("you entered: [" + d.toString().trim() + "]");
+        });
+        */
     }
     var arr = res.data;
     arr.forEach(async function (dep) {
@@ -370,7 +398,12 @@ async function create(args) {
     const metadata = helper_1.updateMetadata(args, JSON.parse(f));
     const response_data = await createRecord(args, metadata);
     console.log(response_data);
-    await finalActions(args, response_data["metadata"]["id"], response_data["metadata"]["links"]["html"]);
+    if (response_data) {
+        await finalActions(args, response_data["id"], response_data["links"]["html"]);
+    }
+    else {
+        console.log("Record creation failed.");
+    }
 }
 exports.create = create;
 //# sourceMappingURL=functions.js.map
