@@ -353,5 +353,6 @@ export async function create(args) {
   const f = fs.readFileSync("blank.json", {encoding: 'utf8'});
   const metadata = updateMetadata(args, JSON.parse(f));
   const response_data = await createRecord(args, metadata);
-  await finalActions(args, response_data["id"], response_data["links"]["html"]);
+  console.log(response_data)
+  await finalActions(args, response_data["metadata"]["id"], response_data["metadata"]["links"]["html"]);
 }
