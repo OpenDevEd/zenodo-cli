@@ -354,5 +354,5 @@ export async function create(args) {
   const metadata = updateMetadata(args, JSON.parse(f));
   const response_data = await createRecord(args, metadata);
   console.log(response_data)
-  await finalActions(args, response_data["metadata"]["id"], response_data["metadata"]["links"]["html"]);
+  await finalActions(args, response_data["id"], response_data["links"]["html"]);
 }
