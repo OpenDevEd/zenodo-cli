@@ -128,9 +128,18 @@ export function updateMetadata(args, metadata) {
     let creatorsNew = []
     if ("creators" in metadata) {
       creatorsNew = metadata["creators"]
-      let auth_arr = args.authors.split(/ *; */);
+      let auth_arr = args.authors
       auth_arr.forEach(creator => {
-        creatorsNew.push({ name: creator});
+        const entry = creator.split(/ *; */);
+        let newentry = {}
+        newentry["name"] = entry[0]
+        if (entry.length > 1) {
+          newentry["institution"] = entry[1]
+        }
+        if (entry.length > 2) {
+          newentry["orcid"] = entry[1]
+        }
+        creatorsNew.push(newentry);
       });
     }
     metadata["creators"] = creatorsNew
