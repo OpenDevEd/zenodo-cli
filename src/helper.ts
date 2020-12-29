@@ -172,7 +172,7 @@ export function updateMetadata(args, metadata) {
     if (fs.existsSync(args.communities)) {
       const comm = fs.readFileSync(args.communities, 'utf-8');
       console.log(comm)
-      communitiesArray = communitiesArray.concat(comm.split("\n"))
+      communitiesArray = communitiesArray.concat(comm.split(/\cM?\n/))
     } else {
       console.log(`Did not find file ${args.communities}`)
       process.exit(1);
@@ -183,12 +183,14 @@ export function updateMetadata(args, metadata) {
   // Make communitiesArray unique:
   communitiesArray = [...new Set(communitiesArray)]
   communitiesArray.forEach(community => {
-    if (!(
-      "remove_communities" in args && args.remove_communities && (args.remove_communities.indexOf(community) !== -1)
-    )) {
+    console.log(`(1) |${typeof (community)}|`);
+    if (
+      !("remove_communities" in args && (args.remove_communities) && (args.remove_communities.indexOf(community) !== -1))
+      && community !== "") {
+      console.log(`- (2) /${community}/`)
       communitiesArrayFinal.push({ "identifier": community });
     }
-    console.log(`- FINAL: ${JSON.stringify(communitiesArrayFinal)}`)
+    console.log(`- (3) ${JSON.stringify(communitiesArrayFinal)}`)
   })
   metadata["communities"] = communitiesArrayFinal;
   console.log(`Arr now: ${JSON.stringify(communitiesArrayFinal)}`)

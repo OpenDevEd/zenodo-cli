@@ -193,7 +193,7 @@ function updateMetadata(args, metadata) {
         if (fs.existsSync(args.communities)) {
             const comm = fs.readFileSync(args.communities, 'utf-8');
             console.log(comm);
-            communitiesArray = communitiesArray.concat(comm.split("\n"));
+            communitiesArray = communitiesArray.concat(comm.split(/\cM?\n/));
         }
         else {
             console.log(`Did not find file ${args.communities}`);
@@ -201,25 +201,17 @@ function updateMetadata(args, metadata) {
         }
     }
     // Step 4. Add communities back to metadata, unless the community has been listed with --remove-communities
-    console.log(`xx=${JSON.stringify(communitiesArray)}`);
-    console.log(`xy=${JSON.stringify(args.remove_communities)}`);
     let communitiesArrayFinal = [];
     // Make communitiesArray unique:
     communitiesArray = [...new Set(communitiesArray)];
     communitiesArray.forEach(community => {
-        console.log(`ARRAY NOW:  ${JSON.stringify(communitiesArrayFinal)}`);
-        console.log(`- Consider: ${community}`);
-        if ("remove_communities" in args
-            &&
-                args.remove_communities
-            &&
-                (args.remove_communities.indexOf(community) !== -1)) {
-            // Do nothing
-        }
-        else {
+        console.log(`(1) |${typeof (community)}|`);
+        if (!("remove_communities" in args && (args.remove_communities) && (args.remove_communities.indexOf(community) !== -1))
+            && community !== "") {
+            console.log(`- (2) /${community}/`);
             communitiesArrayFinal.push({ "identifier": community });
         }
-        console.log(`- FINAL: ${JSON.stringify(communitiesArrayFinal)}`);
+        console.log(`- (3) ${JSON.stringify(communitiesArrayFinal)}`);
     });
     metadata["communities"] = communitiesArrayFinal;
     console.log(`Arr now: ${JSON.stringify(communitiesArrayFinal)}`);
