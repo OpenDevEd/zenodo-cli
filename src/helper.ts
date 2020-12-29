@@ -3,6 +3,7 @@ import * as fs from "fs";
 
 const FALLBACK_CONFIG_FILE = (process.env.HOME + "/.config/zenodo-cli/config.json");
 
+/*
 export function in_es6(left, right) {
   if (((right instanceof Array) || ((typeof right) === "string"))) {
     return (right.indexOf(left) > (-1));
@@ -14,6 +15,7 @@ export function in_es6(left, right) {
     }
   }
 }
+*/
 
 export function loadConfig(configFile) {
   //console.log("load file checking ...")
@@ -58,13 +60,13 @@ export function parseId(id) {
 
 export function showDepositionJSON(info) {
   console.log(`Title: ${info["title"]}`);
-  if (in_es6("publication_date", info["metadata"])) {
+  if ("publication_date" in info["metadata"]) {
     console.log(`Date: ${info["metadata"]["publication_date"]}`);
   } else {
     console.log("Date: N/A");
   }
   console.log(`RecordId: ${info["id"]}`);
-  if (in_es6("conceptrecid", info.keys())) {
+  if ("conceptrecid" in info) {
     console.log(`ConceptId: ${info["conceptrecid"]}`);
   } else {
     console.log("ConceptId: N/A");
@@ -73,7 +75,7 @@ export function showDepositionJSON(info) {
   console.log(`Published: ${info["submitted"] ? "yes" : "no"}`);
   console.log(`State: ${info["state"]}`);
   console.log(`URL: https://zenodo.org/${info["submitted"] ? "record" : "deposit"}/${info["id"]}`);
-  if (in_es6("bucket", info["links"].keys())) {
+  if ("bucket" in info["links"]) {
     console.log(`BucketURL: ${info["links"]["bucket"]}`);
   } else {
     console.log("BucketURL: N/A");
@@ -107,7 +109,7 @@ export function updateMetadata(args, metadata) {
 //metadata[key] = value
     meta_file.close();
   }
-  if (in_es6("creators", metadata)) {
+  if ("creators" in metadata) {
 
     var _pj_auth = [], _pj_b = metadata["creators"];
     for (var _pj_c = 0, _pj_d = _pj_b.length; (_pj_c < _pj_d); _pj_c += 1) {
@@ -119,7 +121,7 @@ export function updateMetadata(args, metadata) {
 
   }
 
-  if ((in_es6("title", args.__dict__) && args.title)) {
+  if ( "title" in args && args.title) {
     metadata["title"] = args.title;
   }
   if ((in_es6("date", args.__dict__) && args.date)) {

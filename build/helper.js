@@ -19,25 +19,24 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updateMetadata = exports.parseIds = exports.dumpJSON = exports.showDepositionJSON = exports.parseId = exports.loadConfig = exports.in_es6 = void 0;
+exports.updateMetadata = exports.parseIds = exports.dumpJSON = exports.showDepositionJSON = exports.parseId = exports.loadConfig = void 0;
 const fs = __importStar(require("fs"));
 const FALLBACK_CONFIG_FILE = (process.env.HOME + "/.config/zenodo-cli/config.json");
-function in_es6(left, right) {
-    if (((right instanceof Array) || ((typeof right) === "string"))) {
-        return (right.indexOf(left) > (-1));
+/*
+export function in_es6(left, right) {
+  if (((right instanceof Array) || ((typeof right) === "string"))) {
+    return (right.indexOf(left) > (-1));
+  } else {
+    if (((right instanceof Map) || (right instanceof Set) || (right instanceof WeakMap) || (right instanceof WeakSet))) {
+      return right.has(left);
+    } else {
+      return (left.indexOf(right) !== -1);
     }
-    else {
-        if (((right instanceof Map) || (right instanceof Set) || (right instanceof WeakMap) || (right instanceof WeakSet))) {
-            return right.has(left);
-        }
-        else {
-            return (left.indexOf(right) !== -1);
-        }
-    }
+  }
 }
-exports.in_es6 = in_es6;
+*/
 function loadConfig(configFile) {
-    console.log("load file checking ...");
+    //console.log("load file checking ...")
     if (fs.statSync(FALLBACK_CONFIG_FILE).isFile()) {
         configFile = FALLBACK_CONFIG_FILE;
     }
@@ -78,14 +77,14 @@ function parseId(id) {
 exports.parseId = parseId;
 function showDepositionJSON(info) {
     console.log(`Title: ${info["title"]}`);
-    if (in_es6("publication_date", info["metadata"])) {
+    if ("publication_date" in info["metadata"]) {
         console.log(`Date: ${info["metadata"]["publication_date"]}`);
     }
     else {
         console.log("Date: N/A");
     }
     console.log(`RecordId: ${info["id"]}`);
-    if (in_es6("conceptrecid", info.keys())) {
+    if ("conceptrecid" in info) {
         console.log(`ConceptId: ${info["conceptrecid"]}`);
     }
     else {
@@ -95,7 +94,7 @@ function showDepositionJSON(info) {
     console.log(`Published: ${info["submitted"] ? "yes" : "no"}`);
     console.log(`State: ${info["state"]}`);
     console.log(`URL: https://zenodo.org/${info["submitted"] ? "record" : "deposit"}/${info["id"]}`);
-    if (in_es6("bucket", info["links"].keys())) {
+    if ("bucket" in info["links"]) {
         console.log(`BucketURL: ${info["links"]["bucket"]}`);
     }
     else {
@@ -130,7 +129,7 @@ function updateMetadata(args, metadata) {
         //metadata[key] = value
         meta_file.close();
     }
-    if (in_es6("creators", metadata)) {
+    if ("creators" in metadata) {
         var _pj_auth = [], _pj_b = metadata["creators"];
         for (var _pj_c = 0, _pj_d = _pj_b.length; (_pj_c < _pj_d); _pj_c += 1) {
             var creator = _pj_b[_pj_c];
@@ -138,7 +137,7 @@ function updateMetadata(args, metadata) {
         }
         metadata["authors"] = _pj_auth.join(";");
     }
-    if ((in_es6("title", args.__dict__) && args.title)) {
+    if ("title" in args && args.title) {
         metadata["title"] = args.title;
     }
     if ((in_es6("date", args.__dict__) && args.date)) {

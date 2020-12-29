@@ -1,4 +1,3 @@
-export declare function in_es6(left: any, right: any): boolean;
 export declare function loadConfig(configFile: any): {
     params: {
         access_token: any;

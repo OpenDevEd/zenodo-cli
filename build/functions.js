@@ -114,16 +114,17 @@ async function fileUpload(args, bucket_url, journal_filepath) {
     console.log("\tUpload successful.");
 }
 async function finalActions(args, id, deposit_url) {
-    if ((helper_1.in_es6("publish", args) && args.publish)) {
+    console.log("final actions");
+    if (("publish" in args) && args.publish) {
         await publishDeposition(args, id);
     }
-    if ((helper_1.in_es6("show", args) && args.show)) {
+    if (("show" in args) && args.show) {
         await showDeposition(args, id);
     }
-    if ((helper_1.in_es6("dump", args) && args.dump)) {
+    if (("dump" in args) && args.dump) {
         await dumpDeposition(args, id);
     }
-    if ((helper_1.in_es6("open", args) && args.open)) {
+    if (("open" in args) && args.open) {
         //webbrowser.open_new_tab(deposit_url);
         opn_1.default(deposit_url);
     }
@@ -131,13 +132,16 @@ async function finalActions(args, id, deposit_url) {
 async function saveIdsToJson(args) {
     let data, ids;
     ids = helper_1.parseIds(args.id);
-    console.log(ids);
+    // Change to:
+    //ids.forEach(id => {
+    //  ...
+    //});
     for (let id, _pj_c = 0, _pj_a = ids, _pj_b = _pj_a.length; (_pj_c < _pj_b); _pj_c += 1) {
         id = _pj_a[_pj_c];
         data = await getData(args, id);
         console.log(data);
-        const path = `${id}.json`;
-        const buffer = Buffer.from(JSON.stringify(data["metadata"]));
+        let path = `${id}.json`;
+        let buffer = Buffer.from(JSON.stringify(data["metadata"]));
         fs.open(path, 'w', function (err, fd) {
             if (err) {
                 throw 'could not open file: ' + err;
@@ -170,6 +174,7 @@ async function duplicate(args) {
     bucket_url = response_data["links"]["bucket"];
     deposit_url = response_data["links"]["html"];
     if (args.files) {
+        // TODO
         for (var filePath, _pj_c = 0, _pj_a = args.files, _pj_b = _pj_a.length; (_pj_c < _pj_b); _pj_c += 1) {
             filePath = _pj_a[_pj_c];
             await fileUpload(args, bucket_url, filePath);
@@ -192,6 +197,7 @@ async function upload(args) {
         }
     }
     if (bucket_url) {
+        // TODO
         for (var filePath, _pj_c = 0, _pj_a = args.files, _pj_b = _pj_a.length; (_pj_c < _pj_b); _pj_c += 1) {
             filePath = _pj_a[_pj_c];
             await fileUpload(args, bucket_url, filePath);
@@ -219,6 +225,7 @@ async function update(args) {
     bucket_url = response_data["links"]["bucket"];
     deposit_url = response_data["links"]["html"];
     if (args.files) {
+        // TODO
         for (var filePath, _pj_c = 0, _pj_a = args.files, _pj_b = _pj_a.length; (_pj_c < _pj_b); _pj_c += 1) {
             filePath = _pj_a[_pj_c];
             await fileUpload(args, bucket_url, filePath);
@@ -232,14 +239,14 @@ async function copy(args) {
     metadata = getMetadata(args, args.id);
     delete metadata["doi"];
     delete metadata["prereserve_doi"];
-    for (var journal_filepath, _pj_c = 0, _pj_a = args.files, _pj_b = _pj_a.length; (_pj_c < _pj_b); _pj_c += 1) {
-        journal_filepath = _pj_a[_pj_c];
+    var arr = args.files;
+    arr.forEach(async function (journal_filepath) {
         console.log(("Processing: " + journal_filepath));
         response_data = await createRecord(args, metadata);
         bucket_url = response_data["links"]["bucket"];
         await fileUpload(args, bucket_url, journal_filepath);
         await finalActions(args, response_data["id"], response_data["links"]["html"]);
-    }
+    });
 }
 exports.copy = copy;
 async function listDepositions(args) {
@@ -251,22 +258,19 @@ async function listDepositions(args) {
         console.log(`Failed in listDepositions: ${res.data}`);
         process.exit(1);
     }
-    if ((helper_1.in_es6("dump", args) && args.dump)) {
+    if ("dump" in args && args.dump) {
         helper_1.dumpJSON(res.data);
     }
-    for (var dep, _pj_c = 0, _pj_a = res.data, _pj_b = _pj_a.length; (_pj_c < _pj_b); _pj_c += 1) {
-        dep = _pj_a[_pj_c];
-        console.log(dep["record_id"], dep["conceptrecid"]);
-        if ((helper_1.in_es6("publish", args) && args.publish)) {
-            await publishDeposition(args, dep["id"]);
-        }
-        if ((helper_1.in_es6("show", args) && args.show)) {
-            helper_1.showDepositionJSON(dep);
-        }
-        if ((helper_1.in_es6("open", args) && args.open)) {
-            opn_1.default(dep["links"]["html"]);
-        }
+    if ("publish" in args && args.publish) {
+        console.log("Warning: using 'list' with '--publish' means that all of your depositions will be published. Please confirm by typing yes.");
+        // TODO
+        // Capture user input. If yser types yes, continue. If user types anything else, then abort.   
     }
+    var arr = res.data;
+    arr.forEach(async function (dep) {
+        console.log(dep["record_id"], dep["conceptrecid"]);
+        await finalActions(args, dep["id"], dep["links"]["html"]);
+    });
 }
 exports.listDepositions = listDepositions;
 async function newVersion(args) {
@@ -286,6 +290,8 @@ async function newVersion(args) {
     const bucket_url = response_data["links"]["bucket"];
     const deposit_url = response_data["links"]["latest_html"];
     if (args.files) {
+        // TODO 
+        // args.files.forEach(filepath)
         for (var filePath, _pj_c = 0, _pj_a = args.files, _pj_b = _pj_a.length; (_pj_c < _pj_b); _pj_c += 1) {
             filePath = _pj_a[_pj_c];
             await fileUpload(args, bucket_url, filePath);
@@ -300,6 +306,8 @@ async function download(args) {
     id = helper_1.parseId(args.id[0]);
     data = await getData(args, id);
     const { params } = helper_1.loadConfig(args.config);
+    // TODO 
+    // data["files"].forEach(fileObj)
     for (var fileObj, _pj_c = 0, _pj_a = data["files"], _pj_b = _pj_a.length; (_pj_c < _pj_b); _pj_c += 1) {
         fileObj = _pj_a[_pj_c];
         name = fileObj["filename"];
@@ -325,9 +333,12 @@ async function concept(args) {
     if ((helper_1.in_es6("dump", args) && args.dump)) {
         helper_1.dumpJSON(res.data);
     }
+    // TODO
+    // res.data.forEach(dep)
     for (var dep, _pj_c = 0, _pj_a = res.data, _pj_b = _pj_a.length; (_pj_c < _pj_b); _pj_c += 1) {
         dep = _pj_a[_pj_c];
         console.log(dep["record_id"], dep["conceptrecid"]);
+        // TODO replace what's below with finalactions.
         if ((helper_1.in_es6("publish", args) && args.publish)) {
             await publishDeposition(args, dep["id"]);
         }
