@@ -101,20 +101,19 @@ async function createRecord(args, metadata) {
         .catch(function (error) {
         axiosError(error);
     });
-    if ((res.status !== 201)) {
-        console.log(`Error in creating new record (other than 201): ${res.data}`);
-        console.log("List of error codes: https://developers.zenodo.org/?shell#http-status-codes");
-        console.log("Response was: " + JSON.stringify(res));
-        process.exit(1);
+    /*
+    option to zenodo-cli --verbose
+    if (verbose) {
+      console.log(zenodoMessage(res.status))
     }
-    else {
-        // Success: res.status == 201
-        return res.data;
-    }
+    */
+    return res.data;
 }
 function axiosError(error) {
     if (error.response) {
         console.log("The request was made and the server responded with a status code that falls out of the range of 2xx");
+        console.log(`ZENODO: Error in creating new record (other than 201)`);
+        console.log("ZENODO: List of error codes: https://developers.zenodo.org/?shell#http-status-codes");
         console.log(error.response.data);
         console.log(error.response.status);
         console.log(error.response.headers);
@@ -165,7 +164,9 @@ async function fileUpload(args, bucket_url, journal_filepath) {
     console.log("\tUpload successful.");
 }
 async function finalActions(args, id, deposit_url) {
+    // if (verbose) {
     console.log("final actions");
+    // }
     if (("publish" in args) && args.publish) {
         await publishDeposition(args, id);
     }
@@ -426,4 +427,23 @@ async function create(args) {
     }
 }
 exports.create = create;
+// TODO
+function zenodoMessage(number) {
+    let errorMessage = "Did not understand error code: " + String(number);
+    const zenodoErrors = `Code	Name	Description
+200	OK	Request succeeded. Response included. Usually sent for GET/PUT/PATCH requests.
+201	Created	Request succeeded. Response included. Usually sent for POST requests.
+202	Accepted	Request succeeded. Response included. Usually sent for POST requests, where background processing is needed to fulfill the request.
+204	No Content	Request succeeded. No response included. Usually sent for DELETE requests.
+400	Bad Request	Request failed. Error response included.
+401	Unauthorized	Request failed, due to an invalid access token. Error response included.
+403	Forbidden	Request failed, due to missing authorization (e.g. deleting an already submitted upload or missing scopes for your access token). Error response included.
+404	Not Found	Request failed, due to the resource not being found. Error response included.
+405	Method Not Allowed	Request failed, due to unsupported HTTP method. Error response included.
+409	Conflict	Request failed, due to the current state of the resource (e.g. edit a deopsition which is not fully integrated). Error response included.
+415	Unsupported Media Type	Request failed, due to missing or invalid request header Content-Type. Error response included.
+429	Too Many Requests	Request failed, due to rate limiting. Error response included.
+500	Internal Server Error	Request failed, due to an internal server error. Error response NOT included. Don’t worry, Zenodo admins have been notified and will be dealing with the problem ASAP.`;
+    return errorMessage;
+}
 //# sourceMappingURL=functions.js.map

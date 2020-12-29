@@ -89,17 +89,12 @@ export function dumpJSON(info) {
   console.log("\n");
 }
 
-// TODO
 export function parseIds(genericIds) {
-  return function () {
-    var _pj_a = [], _pj_b = genericIds;
-    for (var _pj_c = 0, _pj_d = _pj_b.length; (_pj_c < _pj_d); _pj_c += 1) {
-      var id = _pj_b[_pj_c];
-      _pj_a.push(parseId(id));
-    }
-    return _pj_a;
-  }
-    .call(this);
+  let ids = []
+  genericIds.forEach(id => {
+    ids.push(parseId(id))
+  }); 
+  return ids;
 }
 
 export function updateMetadata(args, metadata) {
