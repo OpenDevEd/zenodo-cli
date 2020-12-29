@@ -41,6 +41,7 @@ export function loadConfig(configFile) {
   return { params, zenodoAPIUrl }
 }
 
+// TODO
 export function parseId(id) {
   var dot_split, slash_split;
   if (!isNaN(id.toString())) {
@@ -101,6 +102,10 @@ export function parseIds(genericIds) {
 }
 
 export function updateMetadata(args, metadata) {
+  if (!metadata) {
+    console.log(`Error in code: metadata is undefined.`)
+    process.exit(1);
+  }
   // This function takes an existing object (metadata) and applies changes indicated by args.
   console.log("Updating metadata")
   let authorInformationDict, authorInfo;
@@ -118,7 +123,7 @@ export function updateMetadata(args, metadata) {
         process.exit(1);
       }
       Object.keys(metaIn).forEach(function (key) {
-        metadata[key] = metaIn[key]        
+        metadata[key] = metaIn[key]
       });
       if (Object.keys(metaIn).indexOf("creators") != -1) {
         authorProvided = true
@@ -140,10 +145,10 @@ export function updateMetadata(args, metadata) {
           authorInfo = line.split("\t");
           if (authorInfo.length >= 1) {
             authorInformationDict[authorInfo[0]] = { "name": authorInfo[0] };
-          } 
+          }
           if (authorInfo.length >= 2) {
             authorInformationDict[authorInfo[0]] = { "name": authorInfo[0], "affiliation": authorInfo[1] };
-          } 
+          }
           if (authorInfo.length >= 3) {
             authorInformationDict[authorInfo[0]] = { "name": authorInfo[0], "affiliation": authorInfo[1], "orcid": authorInfo[2] };
           }
@@ -205,10 +210,13 @@ export function updateMetadata(args, metadata) {
   // Handle communities
   let communitiesArray = [];
   // Step 1. Get the original communities
-  const metadataCommunities = metadata["communities"];
-  metadataCommunities.forEach(community => {
-    communitiesArray.push(community["identifier"]);
-  })
+  console.log(JSON.stringify(metadata))
+  if ("communities" in metadata) {
+    const metadataCommunities = metadata["communities"];
+    metadataCommunities.forEach(community => {
+      communitiesArray.push(community["identifier"]);
+    })
+  }
   // Step 2. Add communities specified with --add-communities
   if (("add_communities" in args && args.add_communities)) {
     args.add_communities.forEach(community => {

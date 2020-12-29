@@ -57,6 +57,7 @@ function loadConfig(configFile) {
     return { params, zenodoAPIUrl };
 }
 exports.loadConfig = loadConfig;
+// TODO
 function parseId(id) {
     var dot_split, slash_split;
     if (!isNaN(id.toString())) {
@@ -121,6 +122,10 @@ function parseIds(genericIds) {
 }
 exports.parseIds = parseIds;
 function updateMetadata(args, metadata) {
+    if (!metadata) {
+        console.log(`Error in code: metadata is undefined.`);
+        process.exit(1);
+    }
     // This function takes an existing object (metadata) and applies changes indicated by args.
     console.log("Updating metadata");
     let authorInformationDict, authorInfo;
@@ -189,6 +194,9 @@ function updateMetadata(args, metadata) {
             auth_arr.forEach(creator => {
                 const entry = creator.split(/ *; */);
                 let newentry = {};
+                // TODO
+                // This should result in an error:
+                // npm start -- create --authors
                 if (entry[0] == "") {
                     console.log("Error: The author provided with --authors was blank. You need to provide at least one author.");
                     process.exit(1);
@@ -225,10 +233,13 @@ function updateMetadata(args, metadata) {
     // Handle communities
     let communitiesArray = [];
     // Step 1. Get the original communities
-    const metadataCommunities = metadata["communities"];
-    metadataCommunities.forEach(community => {
-        communitiesArray.push(community["identifier"]);
-    });
+    console.log(JSON.stringify(metadata));
+    if ("communities" in metadata) {
+        const metadataCommunities = metadata["communities"];
+        metadataCommunities.forEach(community => {
+            communitiesArray.push(community["identifier"]);
+        });
+    }
     // Step 2. Add communities specified with --add-communities
     if (("add_communities" in args && args.add_communities)) {
         args.add_communities.forEach(community => {
@@ -259,10 +270,6 @@ function updateMetadata(args, metadata) {
     });
     metadata["communities"] = communitiesArrayFinal;
     // Done with communities
-    /*
-    in_es6\((".*"), *args\)
-    $1 in args
-    */
     if (("zotero_link" in args && args.zotero_link)) {
         metadata["related_identifiers"] = [{
                 "identifier": args.zotero_link,
@@ -271,8 +278,7 @@ function updateMetadata(args, metadata) {
                 "scheme": "url"
             }];
     }
-    console.log(JSON.stringify(metadata));
-    process.exit(1);
+    // console.log(JSON.stringify(metadata))
     return metadata;
 }
 exports.updateMetadata = updateMetadata;

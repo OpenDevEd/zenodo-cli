@@ -129,6 +129,7 @@ async function editDeposit(args, dep_id) {
 async function updateRecord(args, dep_id, metadata) {
   console.log("\tUpdating record.");
   const { zenodoAPIUrl, params } = loadConfig(args.config);
+  // TODO 
   const res = await axios.put(`${zenodoAPIUrl}/${parseId(dep_id)}`, { "json": { "metadata": metadata }, "params": params });
   if ((res.status !== 200)) {
     console.log(`Error in updating record. ${res.data}`);
@@ -236,15 +237,17 @@ export async function upload(args) {
 export async function update(args) {
   var bucket_url, data, deposit_url, id, metadata, response_data;
   id = parseId(args.id[0]);
-  data = getData(args, id);
+  data = await getData(args, id);
   metadata = data["metadata"];
+  console.log(`metadata: ${JSON.stringify(data)}`)
   if ((data["state"] === "done")) {
     console.log("\tMaking record editable.");
     response_data = editDeposit(args, id);
-  } else {
-    metadata = updateMetadata(args, metadata);
-    response_data = updateRecord(args, id, metadata);
-  }
+  };
+  console.log("\tUpdating record.");
+  metadata = updateMetadata(args, metadata);
+  response_data = updateRecord(args, id, metadata);
+  console.log(response_data);
   bucket_url = response_data["links"]["bucket"];
   deposit_url = response_data["links"]["html"];
   if (args.files) {
