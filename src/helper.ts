@@ -183,14 +183,11 @@ export function updateMetadata(args, metadata) {
   // Make communitiesArray unique:
   communitiesArray = [...new Set(communitiesArray)]
   communitiesArray.forEach(community => {
-    console.log(`(1) |${typeof (community)}|`);
     if (
       !("remove_communities" in args && (args.remove_communities) && (args.remove_communities.indexOf(community) !== -1))
       && community !== "") {
-      console.log(`- (2) /${community}/`)
       communitiesArrayFinal.push({ "identifier": community });
     }
-    console.log(`- (3) ${JSON.stringify(communitiesArrayFinal)}`)
   })
   metadata["communities"] = communitiesArrayFinal;
   console.log(`Arr now: ${JSON.stringify(communitiesArrayFinal)}`)
