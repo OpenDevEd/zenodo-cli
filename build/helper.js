@@ -121,30 +121,39 @@ function parseIds(genericIds) {
 }
 exports.parseIds = parseIds;
 function updateMetadata(args, metadata) {
-    console.log("updateMetadata here ...");
-    var author_data_dict, author_data_fp, author_info, comm, creator, meta_file;
+    // This function takes an existing object (metadata) and applies changes indicated by args.
+    console.log("Updating metadata");
+    let author_data_dict, author_data_fp, author_info, comm, creator;
     author_data_dict = {};
+    // If the --json argument is given, load the file, and overwrite metadata accordingly.
     if (("json" in args && args.json)) {
-        meta_file = open(args.json);
-        //for (key, value) in json.load(meta_file).items():
-        let arr = JSON.stringify(meta_file).split('');
-        console.log(arr);
-        arr.forEach((key, value) => {
-            metadata[key] = value;
-        });
-        //metadata[key] = value
-        meta_file.close();
+        if (fs.existsSync(args.json)) {
+            const contents = fs.readFileSync(args.json, 'utf-8');
+            try {
+                let arr = JSON.parse(contents);
+                arr.forEach(function (key, value) {
+                    metadata[key] = value;
+                });
+            }
+            catch (e) {
+                console.log(`Invalid json: ${contents}`);
+                process.exit(1);
+            }
+        }
+        else {
+            console.log(`File does not exist: ${args.json}`);
+            process.exit(1);
+        }
     }
+    console.log(JSON.stringify(metadata));
+    process.exit(1);
     if ("creators" in metadata) {
         //TODO
-        let auth_arr = [], creators = metadata["creators"];
-        //for (var _pj_c = 0, _pj_d = _pj_b.length; (_pj_c < _pj_d); _pj_c += 1) {
+        let auth_arr = [];
+        let creators = metadata["creators"];
         creators.forEach(creator => {
             auth_arr.push(creator["name"]);
         });
-        //var creator = _pj_b[_pj_c];
-        //_pj_auth.push(creator["name"]);
-        //}
         metadata["name"] = auth_arr.join(";");
     }
     if ("title" in args && args.title) {
@@ -157,58 +166,57 @@ function updateMetadata(args, metadata) {
         metadata["description"] = args.description;
     }
     if (("add_communites" in args && args.add_communites)) {
-        var _pj_com = [], _pj_b = args.add_communities;
-        for (var _pj_c = 0, _pj_d = _pj_b.length; (_pj_c < _pj_d); _pj_c += 1) {
-            var community = _pj_b[_pj_c];
-            _pj_com.push({ "identifier": community });
-        }
-        metadata["communities"] = _pj_com;
+        let community_arr = [];
+        let add_communites_arr = args.add_communities;
+        add_communites_arr.forEach(community => {
+            community_arr.push({ "identifier": community });
+        });
+        metadata["communities"] = community_arr.join(";");
     }
     if (("remove_communities" in args && args.remove_communities)) {
-        var _pj_rrcom = [], _pj_b = metadata["communities"];
-        for (var _pj_c = 0, _pj_d = _pj_b.length; (_pj_c < _pj_d); _pj_c += 1) {
-            var community = _pj_b[_pj_c];
+        let communities_arr = [];
+        let metadataCommunities = metadata["communities"];
+        metadataCommunities.forEach(community => {
             if (!(community in args.remove_communities)) {
-                _pj_rrcom.push({ "identifier": community });
+                communities_arr.push({ "identifier": community });
             }
-        }
-        metadata["communities"] = _pj_rrcom;
+        });
+        metadata["communities"] = communities_arr.join(";");
     }
     if (("communities" in args && args.communities)) {
         comm = open(args.communities);
         metadata["communities"] = function () {
-            var _pj_a = [], _pj_b = comm.read().splitlines();
-            for (var _pj_c = 0, _pj_d = _pj_b.length; (_pj_c < _pj_d); _pj_c += 1) {
-                var community = _pj_b[_pj_c];
-                _pj_a.push({ "identifier": community });
-            }
-            return _pj_a;
+            let comm_arr = [], comm_data_arr = comm.read().splitlines();
+            comm_data_arr.forEach(community => {
+                comm_arr.push({ "identifier": community });
+                return comm_arr;
+            });
         }
             .call(this);
         comm.close();
     }
     if (("authordata" in args && args.authordata)) {
         author_data_fp = open(args.authordata);
-        for (var author_data, _pj_c = 0, _pj_a = author_data_fp.read().splitlines(), _pj_b = _pj_a.length; (_pj_c < _pj_b); _pj_c += 1) {
-            author_data = _pj_a[_pj_c];
+        let autherReadData = author_data_fp.read().splitlines();
+        autherReadData.forEach(author_data => {
             if (author_data.strip()) {
                 creator = author_data.split("\t");
                 author_data_dict["name"] = { "name": creator[0], "affiliation": creator[1], "orcid": creator[2] };
             }
-        }
+        });
         author_data_fp.close();
     }
     if (("authors" in args && args.authors)) {
         metadata["creators"] = [];
-        for (var author, _pj_c = 0, _pj_a = args.authors.split(";"), _pj_b = _pj_a.length; (_pj_c < _pj_b); _pj_c += 1) {
-            author = _pj_a[_pj_c];
+        let authersData = args.authors.split(";");
+        authersData.forEach(author => {
             author_info = author_data_dict.get(author, null);
             metadata["creators"].append({
                 "name": author,
                 "affiliation": (author_info ? author_info["affiliation"] : ""),
                 "orcid": (author_info ? author_info["orcid"] : "")
             });
-        }
+        });
     }
     /*
     in_es6\((".*"), *args\)
@@ -225,4 +233,44 @@ function updateMetadata(args, metadata) {
     return metadata;
 }
 exports.updateMetadata = updateMetadata;
+/*
+
+{
+  "access_right": "open",
+  "communities": [
+    {
+      "identifier": "ode"
+    },
+    {
+      "identifier": "publicgoods"
+    },
+    {
+      "identifier": "zenodo"
+    }
+  ],
+  "creators": [
+    {
+      "name": "Haßler, Björn"
+      "affiliation": "(affiliation)"
+
+    },
+    {
+      "name": "Haseloff, Gesine"
+    }
+  ],
+  "description": "<p>This report provides an in-depth overview about the research on technical and vocational education and training (TVET) in Sub-Saharan Africa, to identify gaps in the research and provide the impetus for further research and the formation of international research networks in TVET in Sub-Saharan Africa. This report (in English) is an expanded and revised version of an earlier report, published in 2019 in German (https://lit.bibb.de/vufind/Record/DS-184013). The present report covers the research design (methodological approach) of the report; the quality and relevance of the publications found on TVET; the concept and practice of TVET; stakeholders in TVET research and their networks; topics, perspectives and current debates of TVET research; a systematic review of reliable studies on TVET in SS; models for the design, development and delivery of TVET; gender issues; key state actors; the importance of non-governmental actors in TVET; national standards, guidelines and quality frameworks; challenges that arise when implementing guidelines and political decisions; influencing institutional framework conditions; networks for research. The final chapter offers a summary and &mdash; based on this &mdash; directs our attention to possible future developments regarding TVET and TVET research. A number of appendices present additional information, such as an annotated bibliography, the full bibliography for the report, the methodology for the interviews and structured community review, and the results of the structured community review, as well as a list of additional materials for the report.</p>",
+  "doi": "10.5281/zenodo.3572897",
+  "license": "CC-BY-4.0",
+  "prereserve_doi": {
+    "doi": "10.5281/zenodo.3572897",
+    "recid": 3572897
+  },
+  "publication_date": "2020-10-29",
+  "publication_type": "report",
+  "title": "Technical and Vocational Education and Training in Sub-Saharan Africa: A Systematic Review of the Research Landscape",
+  "upload_type": "publication",
+  "version": "0"
+}
+
+*/ 
 //# sourceMappingURL=helper.js.map
