@@ -166,8 +166,6 @@ function updateMetadata(args, metadata) {
     if (("description" in args && args.description)) {
         metadata["description"] = args.description;
     }
-    console.log(JSON.stringify(metadata));
-    process.exit(1);
     if (("add_communites" in args && args.add_communites)) {
         let community_arr = [];
         let add_communites_arr = args.add_communities;
@@ -176,6 +174,8 @@ function updateMetadata(args, metadata) {
         });
         metadata["communities"] = community_arr.join(";");
     }
+    console.log(JSON.stringify(metadata));
+    process.exit(1);
     if (("remove_communities" in args && args.remove_communities)) {
         let communities_arr = [];
         let metadataCommunities = metadata["communities"];

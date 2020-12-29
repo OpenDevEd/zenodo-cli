@@ -102,8 +102,9 @@ parser_create.add_argument("--remove-communities", {
   "help": "List of communities to be removed from the record (provided on the command line, one by one). Overrides data provided via --json."
 });
 parser_create.add_argument("--authors", {
+  "nargs": "*",
   "action": "store",
-  "help": "List of authors, separated with semicolon. Do not provide institution/ORCID. Instead, these can be supplied using --authordata. Overrides data provided via --json."
+  "help": "List of authors, (provided on the command line, one by one). Separate institution and ORCID with semicolon, e.g. 'Lama Yunis;University of XYZ;0000-1234-...'. (You can also use --authordata.) Overrides data provided via --json."
 });
 parser_create.add_argument("--authordata", {
   "action": "store",
