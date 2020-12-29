@@ -123,7 +123,7 @@ exports.parseIds = parseIds;
 function updateMetadata(args, metadata) {
     // This function takes an existing object (metadata) and applies changes indicated by args.
     console.log("Updating metadata");
-    let author_data_dict, author_data_fp, author_info, comm, creator;
+    let author_data_dict, author_data_fp, author_info, creator;
     author_data_dict = {};
     // If the --json argument is given, load the file, and overwrite metadata accordingly.
     if (("json" in args && args.json)) {
@@ -178,36 +178,51 @@ function updateMetadata(args, metadata) {
     // Handle communities
     let communitiesArray = [];
     // Step 1. Get the original communities
-    let metadataCommunities = metadata["communities"];
+    const metadataCommunities = metadata["communities"];
     metadataCommunities.forEach(community => {
-        communitiesArray.push(community["indentifier"]);
+        communitiesArray.push(community["identifier"]);
     });
     // Step 2. Add communities specified with --add-communities
-    if (("add_communites" in args && args.add_communites)) {
-        args.add_communites.forEach(community => {
+    if (("add_communities" in args && args.add_communities)) {
+        args.add_communities.forEach(community => {
             communitiesArray.push(community);
         });
     }
     // Step 3. Read communities from file, via --communities file.txt
     if (("communities" in args && args.communities)) {
         if (fs.existsSync(args.communities)) {
-            comm = fs.readFileSync(args.communities);
-            communitiesArray.push(comm.split("\n"));
+            const comm = fs.readFileSync(args.communities, 'utf-8');
+            console.log(comm);
+            communitiesArray = communitiesArray.concat(comm.split("\n"));
         }
         else {
-            console.log();
+            console.log(`Did not find file ${args.communities}`);
+            process.exit(1);
         }
     }
     // Step 4. Add communities back to metadata, unless the community has been listed with --remove-communities
+    console.log(`xx=${JSON.stringify(communitiesArray)}`);
+    console.log(`xy=${JSON.stringify(args.remove_communities)}`);
     let communitiesArrayFinal = [];
-    if (("remove_communities" in args && args.remove_communities)) {
-        communitiesArray.forEach(community => {
-            if (!(community in args.remove_communities && community in communitiesArrayFinal)) {
-                communitiesArrayFinal.push({ "identifier": community });
-            }
-        });
-    }
+    // Make communitiesArray unique:
+    communitiesArray = [...new Set(communitiesArray)];
+    communitiesArray.forEach(community => {
+        console.log(`ARRAY NOW:  ${JSON.stringify(communitiesArrayFinal)}`);
+        console.log(`- Consider: ${community}`);
+        if ("remove_communities" in args
+            &&
+                args.remove_communities
+            &&
+                (args.remove_communities.indexOf(community) !== -1)) {
+            // Do nothing
+        }
+        else {
+            communitiesArrayFinal.push({ "identifier": community });
+        }
+        console.log(`- FINAL: ${JSON.stringify(communitiesArrayFinal)}`);
+    });
     metadata["communities"] = communitiesArrayFinal;
+    console.log(`Arr now: ${JSON.stringify(communitiesArrayFinal)}`);
     // Done with communities
     console.log(JSON.stringify(metadata));
     process.exit(1);

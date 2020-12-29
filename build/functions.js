@@ -388,16 +388,17 @@ async function concept(args) {
 }
 exports.concept = concept;
 async function create(args) {
+    // Note that Zenodo does not require a date or a DOI, but it will generate those on creation.
     const blankJson = `{
     "access_right": "open",
     "creators": [
       {
-          "name": "(name)",
-          "affiliation": "(affiliation)"
+          "name": "No name available.",
+          "affiliation": "No affiliation available."
       }
     ],
     "title": "No title available.",
-    "description": "No description available",
+    "description": "No description available.",
     "communities": [
       {
         "identifier": "zenodo"
