@@ -175,38 +175,42 @@ function updateMetadata(args, metadata) {
     if (("description" in args && args.description)) {
         metadata["description"] = args.description;
     }
+    // Handle communities
+    let communitiesArray = [];
+    // Step 1. Get the original communities
+    let metadataCommunities = metadata["communities"];
+    metadataCommunities.forEach(community => {
+        communitiesArray.push(community["indentifier"]);
+    });
+    // Step 2. Add communities specified with --add-communities
     if (("add_communites" in args && args.add_communites)) {
-        let community_arr = [];
-        let add_communites_arr = args.add_communities;
-        add_communites_arr.forEach(community => {
-            community_arr.push({ "identifier": community });
+        args.add_communites.forEach(community => {
+            communitiesArray.push(community);
         });
-        metadata["communities"] = community_arr.join(";");
     }
-    console.log(JSON.stringify(metadata));
-    process.exit(1);
+    // Step 3. Read communities from file, via --communities file.txt
+    if (("communities" in args && args.communities)) {
+        if (fs.existsSync(args.communities)) {
+            comm = fs.readFileSync(args.communities);
+            communitiesArray.push(comm.split("\n"));
+        }
+        else {
+            console.log();
+        }
+    }
+    // Step 4. Add communities back to metadata, unless the community has been listed with --remove-communities
+    let communitiesArrayFinal = [];
     if (("remove_communities" in args && args.remove_communities)) {
-        let communities_arr = [];
-        let metadataCommunities = metadata["communities"];
-        metadataCommunities.forEach(community => {
-            if (!(community in args.remove_communities)) {
-                communities_arr.push({ "identifier": community });
+        communitiesArray.forEach(community => {
+            if (!(community in args.remove_communities && community in communitiesArrayFinal)) {
+                communitiesArrayFinal.push({ "identifier": community });
             }
         });
-        metadata["communities"] = communities_arr.join(";");
     }
-    if (("communities" in args && args.communities)) {
-        comm = open(args.communities);
-        metadata["communities"] = function () {
-            let comm_arr = [], comm_data_arr = comm.read().splitlines();
-            comm_data_arr.forEach(community => {
-                comm_arr.push({ "identifier": community });
-                return comm_arr;
-            });
-        }
-            .call(this);
-        comm.close();
-    }
+    metadata["communities"] = communitiesArrayFinal;
+    // Done with communities
+    console.log(JSON.stringify(metadata));
+    process.exit(1);
     if (("authordata" in args && args.authordata)) {
         author_data_fp = open(args.authordata);
         let autherReadData = author_data_fp.read().splitlines();

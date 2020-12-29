@@ -388,8 +388,28 @@ async function concept(args) {
 }
 exports.concept = concept;
 async function create(args) {
-    const f = fs.readFileSync("blank.json", { encoding: 'utf8' });
-    const metadata = helper_1.updateMetadata(args, JSON.parse(f));
+    const blankJson = `{
+    "access_right": "open",
+    "creators": [
+      {
+          "name": "(name)",
+          "affiliation": "(affiliation)"
+      }
+    ],
+    "title": "No title available.",
+    "description": "No description available",
+    "communities": [
+      {
+        "identifier": "zenodo"
+      }
+    ],
+    "doi": "",
+    "publication_type": "report",
+    "upload_type": "publication"
+  }
+  `;
+    //const f = fs.readFileSync("blank.json", { encoding: 'utf8' });
+    const metadata = helper_1.updateMetadata(args, JSON.parse(blankJson));
     const response_data = await createRecord(args, metadata);
     console.log(response_data);
     if (response_data) {
