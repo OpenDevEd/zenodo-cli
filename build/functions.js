@@ -136,8 +136,7 @@ async function saveIdsToJson(args) {
     //ids.forEach(id => {
     //  ...
     //});
-    for (let id, _pj_c = 0, _pj_a = ids, _pj_b = _pj_a.length; (_pj_c < _pj_b); _pj_c += 1) {
-        id = _pj_a[_pj_c];
+    ids.forEach(async function (id) {
         data = await getData(args, id);
         console.log(data);
         let path = `${id}.json`;
@@ -156,7 +155,7 @@ async function saveIdsToJson(args) {
             });
         });
         await finalActions(args, id, data["links"]["html"]);
-    }
+    });
 }
 exports.saveIdsToJson = saveIdsToJson;
 async function dumpDeposition(args, id) {
@@ -175,10 +174,9 @@ async function duplicate(args) {
     deposit_url = response_data["links"]["html"];
     if (args.files) {
         // TODO
-        for (var filePath, _pj_c = 0, _pj_a = args.files, _pj_b = _pj_a.length; (_pj_c < _pj_b); _pj_c += 1) {
-            filePath = _pj_a[_pj_c];
+        args.files.forEach(async function (filePath) {
             await fileUpload(args, bucket_url, filePath);
-        }
+        });
     }
     await finalActions(args, response_data["id"], deposit_url);
 }
@@ -197,11 +195,9 @@ async function upload(args) {
         }
     }
     if (bucket_url) {
-        // TODO
-        for (var filePath, _pj_c = 0, _pj_a = args.files, _pj_b = _pj_a.length; (_pj_c < _pj_b); _pj_c += 1) {
-            filePath = _pj_a[_pj_c];
+        args.files.forEach(async function (filePath) {
             await fileUpload(args, bucket_url, filePath);
-        }
+        });
         await finalActions(args, args.id, deposit_url);
     }
     else {
@@ -225,11 +221,9 @@ async function update(args) {
     bucket_url = response_data["links"]["bucket"];
     deposit_url = response_data["links"]["html"];
     if (args.files) {
-        // TODO
-        for (var filePath, _pj_c = 0, _pj_a = args.files, _pj_b = _pj_a.length; (_pj_c < _pj_b); _pj_c += 1) {
-            filePath = _pj_a[_pj_c];
+        args.files.forEach(async function (filePath) {
             await fileUpload(args, bucket_url, filePath);
-        }
+        });
     }
     await finalActions(args, id, deposit_url);
 }
@@ -290,12 +284,9 @@ async function newVersion(args) {
     const bucket_url = response_data["links"]["bucket"];
     const deposit_url = response_data["links"]["latest_html"];
     if (args.files) {
-        // TODO 
-        // args.files.forEach(filepath)
-        for (var filePath, _pj_c = 0, _pj_a = args.files, _pj_b = _pj_a.length; (_pj_c < _pj_b); _pj_c += 1) {
-            filePath = _pj_a[_pj_c];
+        args.files.forEach(async function (filePath) {
             await fileUpload(args, bucket_url, filePath);
-        }
+        });
     }
     await finalActions(args, response_data["id"], deposit_url);
     console.log("latest_draft: ", response_data["links"]["latest_draft"]);
@@ -306,10 +297,7 @@ async function download(args) {
     id = helper_1.parseId(args.id[0]);
     data = await getData(args, id);
     const { params } = helper_1.loadConfig(args.config);
-    // TODO 
-    // data["files"].forEach(fileObj)
-    for (var fileObj, _pj_c = 0, _pj_a = data["files"], _pj_b = _pj_a.length; (_pj_c < _pj_b); _pj_c += 1) {
-        fileObj = _pj_a[_pj_c];
+    data["files"].forEach(async function (fileObj) {
         name = fileObj["filename"];
         console.log(`Downloading ${name}`);
         const res = await axios_1.default.get(fileObj["links"]["download"], { "params": params });
@@ -319,7 +307,7 @@ async function download(args) {
         fp = open((name + ".md5"), "w+");
         fp.write(((fileObj["checksum"] + " ") + fileObj["filename"]));
         fp.close();
-    }
+    });
 }
 exports.download = download;
 async function concept(args) {
@@ -330,25 +318,24 @@ async function concept(args) {
         console.log(`Failed in concept(args): `, res.data);
         process.exit(1);
     }
-    if ((helper_1.in_es6("dump", args) && args.dump)) {
+    if ("dump" in args && args.dump) {
         helper_1.dumpJSON(res.data);
     }
     // TODO
     // res.data.forEach(dep)
-    for (var dep, _pj_c = 0, _pj_a = res.data, _pj_b = _pj_a.length; (_pj_c < _pj_b); _pj_c += 1) {
-        dep = _pj_a[_pj_c];
+    res.data.forEach(async function (dep) {
         console.log(dep["record_id"], dep["conceptrecid"]);
         // TODO replace what's below with finalactions.
-        if ((helper_1.in_es6("publish", args) && args.publish)) {
+        if ("publish" in args && args.publish) {
             await publishDeposition(args, dep["id"]);
         }
-        if ((helper_1.in_es6("show", args) && args.show)) {
+        if ("show" in args && args.show) {
             helper_1.showDepositionJSON(dep);
         }
-        if ((helper_1.in_es6("open", args) && args.open)) {
+        if ("open" in args && args.open) {
             opn_1.default(dep["links"]["html"]);
         }
-    }
+    });
 }
 exports.concept = concept;
 async function create(args) {
