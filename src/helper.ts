@@ -104,6 +104,7 @@ export function updateMetadata(args, metadata) {
   // This function takes an existing object (metadata) and applies changes indicated by args.
   console.log("Updating metadata")
   let authorInformationDict, authorInfo;
+  let authorProvided = false
   authorInformationDict = {};
   // If the --json argument is given, load the file, and overwrite metadata accordingly.
   if (("json" in args && args.json)) {
@@ -117,8 +118,11 @@ export function updateMetadata(args, metadata) {
         process.exit(1);
       }
       Object.keys(metaIn).forEach(function (key) {
-        metadata[key] = metaIn[key]
+        metadata[key] = metaIn[key]        
       });
+      if (Object.keys(metaIn).indexOf("creators") != -1) {
+        authorProvided = true
+      }
     } else {
       console.log(`File does not exist: ${args.json}`)
       process.exit(1);
@@ -129,40 +133,55 @@ export function updateMetadata(args, metadata) {
   if (("authordata" in args && args.authordata)) {
     if (fs.existsSync(args.authordata)) {
       const authFile = fs.readFileSync(args.authordata, 'utf-8');
-      let autherData = authFile.split(/\n/)
-      autherData.forEach(line => {
+      let authorData = authFile.split(/\n/)
+      authorData.forEach(line => {
         if (line) {
+          //console.log(`line: ${line}`)
           authorInfo = line.split("\t");
           if (authorInfo.length >= 1) {
             authorInformationDict[authorInfo[0]] = { "name": authorInfo[0] };
-          } else if (authorInfo.length >= 2) {
+          } 
+          if (authorInfo.length >= 2) {
             authorInformationDict[authorInfo[0]] = { "name": authorInfo[0], "affiliation": authorInfo[1] };
-          } else if (authorInfo.length >= 3) {
+          } 
+          if (authorInfo.length >= 3) {
             authorInformationDict[authorInfo[0]] = { "name": authorInfo[0], "affiliation": authorInfo[1], "orcid": authorInfo[2] };
           }
+          //console.log(JSON.stringify(authorInformationDict))
         }
       });
     } else {
-      console.log(`ERROR, file missing ${args.authordata}`)
+      console.log(`Error, authordata file missing ${args.authordata}`)
+      process.exit(1)
     }
   }
   // Step 2. Collect authors
   if ("authors" in args && args.authors) {
     let creatorsNew = []
     if ("creators" in metadata) {
-      creatorsNew = metadata["creators"]
+      if (authorProvided) {
+        creatorsNew = metadata["creators"]
+      }
       let auth_arr = args.authors
       auth_arr.forEach(creator => {
         const entry = creator.split(/ *; */);
         let newentry = {}
+        // TODO
+        // This should result in an error:
+        // npm start -- create --authors
+        if (entry[0] == "") {
+          console.log("Error: The author provided with --authors was blank. You need to provide at least one author.")
+          process.exit(1)
+        }
         newentry["name"] = entry[0]
-        if (entry.length >= 1 && entry[1] != "") {
-          newentry["institution"] = entry[1]
-        } else if (authorInformationDict[entry[0]]) {
-          // Excercise left to the developer: Why do we not need to write && "institution" in authorInformationDict[entry[0]] ?
+        if (entry.length >= 2 && entry[1] != "") {
+          newentry["affiliation"] = entry[1]
+        } else if ("affiliation" in authorInformationDict[entry[0]]) {
+          console.log("Do we get here?")
+          // Excercise left to the developer: Why do we not need to write && "affliation" in authorInformationDict[entry[0]] ?
           newentry = authorInformationDict[entry[0]]
         }
-        if (entry.length >= 2) {
+        if (entry.length >= 3) {
           newentry["orcid"] = entry[2]
         } else if (authorInformationDict[entry[0]] && "orcid" in authorInformationDict[entry[0]]) {
           newentry["orcid"] = authorInformationDict[entry[0]]["orcid"]
@@ -172,6 +191,7 @@ export function updateMetadata(args, metadata) {
     }
     metadata["creators"] = creatorsNew
   }
+
   if ("title" in args && args.title) {
     metadata["title"] = args.title;
   }
@@ -219,10 +239,7 @@ export function updateMetadata(args, metadata) {
   })
   metadata["communities"] = communitiesArrayFinal;
   // Done with communities
-  /*
-  in_es6\((".*"), *args\)
-  $1 in args
-  */
+
   if (("zotero_link" in args && args.zotero_link)) {
     metadata["related_identifiers"] = [{
       "identifier": args.zotero_link,
@@ -231,6 +248,7 @@ export function updateMetadata(args, metadata) {
       "scheme": "url"
     }];
   }
+  // console.log(JSON.stringify(metadata))
   return metadata;
 }
 
