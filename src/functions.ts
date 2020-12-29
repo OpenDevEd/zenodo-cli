@@ -67,7 +67,7 @@ async function createRecord(args, metadata) {
 
   // At present, the file blank.json is used as a default, therefore the checks below will pass.
   // However, blank.json does not contain a date - Zenodo will use todays date
-  const requiredMetadataFields = ["title", "description", "authors"]
+  /* const requiredMetadataFields = ["title", "description", "authors"]
   var raiseErrorMissingMetadata = false
   requiredMetadataFields.forEach(metadatafield => {
     if (!(metadatafield in metadata)) {
@@ -80,7 +80,7 @@ async function createRecord(args, metadata) {
   if (raiseErrorMissingMetadata) {
     console.log("One or more required fields are missing. Please consult 'create -h'.")
     process.exit(1)
-  }
+  } */
   const payload = {"metadata" : metadata}
   const options = { headers: {'Content-Type': "application/json"} }
   const res = await axios.post(zenodoAPIUrlWithToken, JSON.stringify(payload), options )

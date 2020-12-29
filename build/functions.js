@@ -80,13 +80,8 @@ async function createRecord(args, metadata) {
     //console.log(`params: ${JSON.stringify(params)}`)
     const zenodoAPIUrlWithToken = zenodoAPIUrl + "?access_token=" + params["access_token"];
     // At present, the file blank.json is used as a default, therefore the checks below will pass.
-    // However, blank.json does not contain a date, therefore, we have to supply the date if it is empty.
-    if (!("date" in metadata) || metadata["date"].length === 0) {
-        console.log("Using today's date.");
-        // TODO - replace string 2020-12-29 with todays date... new date("%Y-%m-%d")
-        metadata["date"] = "2020-12-29";
-    }
-    const requiredMetadataFields = ["title", "date", "description", "authors"];
+    // However, blank.json does not contain a date - Zenodo will use todays date
+    const requiredMetadataFields = ["title", "description", "authors"];
     var raiseErrorMissingMetadata = false;
     requiredMetadataFields.forEach(metadatafield => {
         if (!(metadatafield in metadata)) {
