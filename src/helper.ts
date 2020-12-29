@@ -179,23 +179,13 @@ export function updateMetadata(args, metadata) {
     }
   }
   // Step 4. Add communities back to metadata, unless the community has been listed with --remove-communities
-  console.log(`xx=${JSON.stringify(communitiesArray)}`)
-  console.log(`xy=${JSON.stringify(args.remove_communities)}`)
   let communitiesArrayFinal = [];
   // Make communitiesArray unique:
   communitiesArray = [...new Set(communitiesArray)]
   communitiesArray.forEach(community => {
-    console.log(`ARRAY NOW:  ${JSON.stringify(communitiesArrayFinal)}`)
-    console.log(`- Consider: ${community}`)
-    if (
-      "remove_communities" in args
-      &&
-      args.remove_communities
-      &&
-      (args.remove_communities.indexOf(community) !== -1)
-      ) {
-      // Do nothing
-    } else {
+    if (!(
+      "remove_communities" in args && args.remove_communities && (args.remove_communities.indexOf(community) !== -1)
+    )) {
       communitiesArrayFinal.push({ "identifier": community });
     }
     console.log(`- FINAL: ${JSON.stringify(communitiesArrayFinal)}`)
