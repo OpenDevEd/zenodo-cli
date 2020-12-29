@@ -121,21 +121,31 @@ function parseIds(genericIds) {
 }
 exports.parseIds = parseIds;
 function updateMetadata(args, metadata) {
+    console.log("updateMetadata here ...");
     var author_data_dict, author_data_fp, author_info, comm, creator, meta_file;
     author_data_dict = {};
     if (("json" in args && args.json)) {
         meta_file = open(args.json);
         //for (key, value) in json.load(meta_file).items():
+        let arr = JSON.stringify(meta_file).split('');
+        console.log(arr);
+        arr.forEach((key, value) => {
+            metadata[key] = value;
+        });
         //metadata[key] = value
         meta_file.close();
     }
     if ("creators" in metadata) {
-        var _pj_auth = [], _pj_b = metadata["creators"];
-        for (var _pj_c = 0, _pj_d = _pj_b.length; (_pj_c < _pj_d); _pj_c += 1) {
-            var creator = _pj_b[_pj_c];
-            _pj_auth.push(creator["name"]);
-        }
-        metadata["authors"] = _pj_auth.join(";");
+        //TODO
+        let auth_arr = [], creators = metadata["creators"];
+        //for (var _pj_c = 0, _pj_d = _pj_b.length; (_pj_c < _pj_d); _pj_c += 1) {
+        creators.forEach(creator => {
+            auth_arr.push(creator["name"]);
+        });
+        //var creator = _pj_b[_pj_c];
+        //_pj_auth.push(creator["name"]);
+        //}
+        metadata["name"] = auth_arr.join(";");
     }
     if ("title" in args && args.title) {
         metadata["title"] = args.title;

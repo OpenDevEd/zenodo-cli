@@ -101,22 +101,29 @@ export function parseIds(genericIds) {
 }
 
 export function updateMetadata(args, metadata) {
-  var author_data_dict, author_data_fp, author_info, comm, creator, meta_file;
+  console.log("updateMetadata here ...")
+  let author_data_dict, author_data_fp, author_info, comm, creator, meta_file;
   author_data_dict = {};
   if (("json" in args && args.json)) {
     meta_file = open(args.json);
 //for (key, value) in json.load(meta_file).items():
-//metadata[key] = value
+////metadata[key] = value
+    let arr = JSON.stringify(meta_file).split('')
+    console.log(arr);
+    arr.forEach((key,value) => {
+    metadata[key] = value;
+   });
+
     meta_file.close();
   }
   if ("creators" in metadata) {
 //TODO
-    var _pj_auth = [], _pj_b = metadata["creators"];
-    for (var _pj_c = 0, _pj_d = _pj_b.length; (_pj_c < _pj_d); _pj_c += 1) {
-      var creator = _pj_b[_pj_c];
-      _pj_auth.push(creator["name"]);
-    }
-    metadata["name"] = _pj_auth.join(";");
+    let auth_arr = [];
+    let creators = metadata["creators"];
+    creators.forEach(creator => {
+        auth_arr.push(creator["name"]);
+      });
+    metadata["name"] = auth_arr.join(";");
 
   }
 
@@ -131,69 +138,73 @@ export function updateMetadata(args, metadata) {
   }
   if (("add_communites" in args && args.add_communites)) {
 
-    var _pj_com = [], _pj_b = args.add_communities;
-    for (var _pj_c = 0, _pj_d = _pj_b.length; (_pj_c < _pj_d); _pj_c += 1) {
-      var community = _pj_b[_pj_c];
-      _pj_com.push({"identifier": community});
-    }
-
-    metadata["communities"] = _pj_com;
+    let community_arr = [];
+    let add_communites_arr = args.add_communities;
+    add_communites_arr.forEach(community => {
+        community_arr.push({"identifier": community});
+      });
+     
+    metadata["communities"] = community_arr.join(";");
   }
+
   if (("remove_communities" in args && args.remove_communities)) {
 
-    var _pj_rrcom = [], _pj_b = metadata["communities"];
-    for (var _pj_c = 0, _pj_d = _pj_b.length; (_pj_c < _pj_d); _pj_c += 1) {
-      var community = _pj_b[_pj_c];
-
-      if (!(community in args.remove_communities)) {
-        _pj_rrcom.push({"identifier": community});
-      }
-    }
-
-    metadata["communities"] = _pj_rrcom;
+    let communities_arr = [];
+    let metadataCommunities = metadata["communities"];
+   
+    metadataCommunities.forEach(community => {
+        if (!(community in args.remove_communities)) {
+          communities_arr.push({"identifier": community});
+        }              
+      });
+     
+    metadata["communities"] = communities_arr.join(";");      
   }
+
   if (("communities" in args && args.communities)) {
     comm = open(args.communities);
     metadata["communities"] = function () {
-      var _pj_a = [], _pj_b = comm.read().splitlines();
-      for (var _pj_c = 0, _pj_d = _pj_b.length; (_pj_c < _pj_d); _pj_c += 1) {
-        var community = _pj_b[_pj_c];
-        _pj_a.push({"identifier": community});
-      }
-      return _pj_a;
+    let  comm_arr = [], comm_data_arr = comm.read().splitlines();   
+    comm_data_arr.forEach(community => {
+          comm_arr.push({"identifier": community});
+          return comm_arr;
+        });
     }
-      .call(this);
+    .call(this);
     comm.close();
   }
   if (("authordata" in args && args.authordata)) {
     author_data_fp = open(args.authordata);
-    for (var author_data, _pj_c = 0, _pj_a = author_data_fp.read().splitlines(), _pj_b = _pj_a.length; (_pj_c < _pj_b); _pj_c += 1) {
-      author_data = _pj_a[_pj_c];
-      if (author_data.strip()) {
-        creator = author_data.split("\t");
-        author_data_dict["name"] = {"name": creator[0], "affiliation": creator[1], "orcid": creator[2]};
-      }
-    }
+    let autherReadData = author_data_fp.read().splitlines()
+    autherReadData.forEach(author_data => {
+        if (author_data.strip()) {
+          creator = author_data.split("\t");
+          author_data_dict["name"] = {"name": creator[0], "affiliation": creator[1], "orcid": creator[2]};
+        }       
+      });
+      
     author_data_fp.close();
   }
   if (("authors" in args && args.authors)) {
     metadata["creators"] = [];
-    for (var author, _pj_c = 0, _pj_a = args.authors.split(";"), _pj_b = _pj_a.length; (_pj_c < _pj_b); _pj_c += 1) {
-      author = _pj_a[_pj_c];
-      author_info = author_data_dict.get(author, null);
-      metadata["creators"].append({
-        "name": author,
-        "affiliation": (author_info ? author_info["affiliation"] : ""),
-        "orcid": (author_info ? author_info["orcid"] : "")
+    let authersData = args.authors.split(";")
+     authersData.forEach(author => {
+        author_info = author_data_dict.get(author, null);
+        metadata["creators"].append({
+          "name": author,
+          "affiliation": (author_info ? author_info["affiliation"] : ""),
+          "orcid": (author_info ? author_info["orcid"] : "")
+        });
+        
       });
-    }
+    
   }
   /*
   in_es6\((".*"), *args\)
   $1 in args
   */
   if (("zotero_link" in args && args.zotero_link)) {
-    metadata["related_identifiers"] = [{
+       metadata["related_identifiers"] = [{
       "identifier": args.zotero_link,
       "relation": "isAlternateIdentifier",
       "resource_type": "other",
