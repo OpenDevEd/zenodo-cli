@@ -101,40 +101,49 @@ async function createRecord(args, metadata) {
     const payload = { "metadata": metadata };
     console.log(JSON.stringify(payload));
     const options = { headers: { 'Content-Type': "application/json" }, params: params };
-    const res = await axios_1.default.post(zenodoAPIUrl, JSON.stringify(payload), options)
-        .catch(err => (err));
+    const resData = await axios_1.default.post(zenodoAPIUrl, JSON.stringify(payload), options)
+        .then(res => {
+        //if (verbose) {
+        console.log(res.status);
+        //  console.log(res)
+        //}
+        return res.data;
+    }).catch(err => {
+        axiosError(err);
+    });
     /*
     option to zenodo-cli --verbose
     if (verbose) {
       console.log(zenodoMessage(res.status))
     }
     */
-    return res.data;
+    return resData;
 }
-/*
-TODO:
-function axiosError(error) {
-  if (error.response) {
-    console.log("The request was made and the server responded with a status code that falls out of the range of 2xx")
-    console.log(`ZENODO: Error in creating new record (other than 201)`);
-    console.log("ZENODO: List of error codes: https://developers.zenodo.org/?shell#http-status-codes");
-    console.log(error.response.data);
-    console.log(error.response.status);
-    console.log(error.response.headers);
-  } else if (error.request) {
-    console.log(`The request was made but no response was received
+//TODO:
+async function axiosError(error) {
+    if (error.response) {
+        console.log("The request was made and the server responded with a status code that falls out of the range of 2xx");
+        console.log(`ZENODO: Error in creating new record (other than 201)`);
+        console.log("ZENODO: List of error codes: https://developers.zenodo.org/?shell#http-status-codes");
+        console.log(error.response.data);
+        console.log(error.response.status);
+        console.log(error.response.headers);
+    }
+    else if (error.request) {
+        console.log(`The request was made but no response was received
     'error.request' is an instance of XMLHttpRequest in the browser and an instance of
     http.ClientRequest in node.js`);
-    console.log(error.request);
-  } else {
-    console.log("Something happened in setting up the request that triggered an Error")
-    console.log('Error', error.message);
-  }
-  console.log(error.config);
-  console.log(`Fatal error in create->axios.post: ${error}`);
-  process.exit(1);
-};
-*/
+        console.log(error.request);
+    }
+    else {
+        console.log("Something happened in setting up the request that triggered an Error");
+        console.log('Error', error.message);
+    }
+    console.log(error.config);
+    console.log(`Fatal error in create->axios.post: ${error}`);
+    process.exit(1);
+}
+;
 async function editDeposit(args, dep_id) {
     const { zenodoAPIUrl, params } = helper_1.loadConfig(args.config);
     const options = { headers: { 'Content-Type': "application/json" }, params: params };
@@ -442,7 +451,8 @@ async function create(args) {
   `;
     //const f = fs.readFileSync("blank.json", { encoding: 'utf8' });
     const metadata = helper_1.updateMetadata(args, JSON.parse(blankJson));
-    const response_data = await createRecord(args, metadata);
+    let response_data;
+    response_data = await createRecord(args, metadata);
     console.log(response_data);
     if (response_data) {
         await finalActions(args, response_data["id"], response_data["links"]["html"]);

@@ -309,8 +309,22 @@ if ((process.argv.length === 1)) {
     parser.print_help();
     process.exit(1);
 }
-console.log(args);
-args.func(args);
+//
+// zenodo-cli create --title "..." --authors "..." --dryrun
+const dryrun = false;
+if (dryrun) {
+    console.log(`API command:\n ZenodoAPI(${JSON.stringify(args)})`); // Make this pretty print.
+}
+else {
+    // ZenodoAPI(args)
+    args.func(args);
+}
+/*
+// In API-LIB:
+async function ZenodoAPI(args) {
+    args.func(args);
+}
+*/
 module.exports = {
     node: 'current'
 };
