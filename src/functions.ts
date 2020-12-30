@@ -75,42 +75,30 @@ async function getMetadata(args, id) {
 async function createRecord(args, metadata) {
   console.log("\tCreating record.");
   const { zenodoAPIUrl, params } = loadConfig(args.config);
-  //console.log(`URI:    ${zenodoAPIUrl}`)
-  //const zenodoAPIUrlWithToken = zenodoAPIUrl+"?access_token="+params["access_token"]
+  /* 
+    console.log(`URI:    ${zenodoAPIUrl}`)
+    const zenodoAPIUrlWithToken = zenodoAPIUrl+"?access_token="+params["access_token"]
 
-  // At present, the file blank.json is used as a default, therefore the checks below will pass.
-  // However, blank.json does not contain a date - Zenodo will use todays date
-  /* const requiredMetadataFields = ["title", "description", "authors"]
-  var raiseErrorMissingMetadata = false
-  requiredMetadataFields.forEach(metadatafield => {
+    At present, the file blank.json is used as a default, therefore the checks below will pass.
+    However, blank.json does not contain a date - Zenodo will use todays date
+    const requiredMetadataFields = ["title", "description", "authors"]
+    var raiseErrorMissingMetadata = false
+    requiredMetadataFields.forEach(metadatafield => {
     if (!(metadatafield in metadata)) {
       console.log(`To create a new record, you need to supply the ${metadatafield}.`);
       raiseErrorMissingMetadata = true
-    } else {
-      console.log(`Go to ${metadatafield} = ${metadata[metadatafield]}`)
-    }
-  });
-  if (raiseErrorMissingMetadata) {
-    console.log("One or more required fields are missing. Please consult 'create -h'.")
-    process.exit(1)
-  } */
-  const payload = { "metadata": metadata }
-  console.log(JSON.stringify(payload))
-  const options = { headers: { 'Content-Type': "application/json" }, params: params }
-  const resData = await axios.post(zenodoAPIUrl, JSON.stringify(payload), options)
-  .then(res => {
-    //if (verbose) {
-      console.log(res.status)
-     // zenodoMessage(res.status)
-    //  console.log(res)
-    //}
-    return res.data;
-  }).catch(err => {
-    axiosError(err)
-  });
-/*
-   TODO: Test that if works.
+      }  else {
+       console.log(`Go to ${metadatafield} = ${metadata[metadatafield]}`)
+      }
+    });
+    if (raiseErrorMissingMetadata) {
+     console.log("One or more required fields are missing. Please consult 'create -h'.")
+     process.exit(1)
+    } 
 
+   */
+  const payload = { "metadata": metadata }
+  //console.log(JSON.stringify(payload))
   const options = { 
     method: "post", 
     url: zenodoAPIUrl, 
@@ -118,47 +106,44 @@ async function createRecord(args, metadata) {
     headers: { 'Content-Type': "application/json" }, 
     data: payload
   }
-  const resData = await apiCall(options)
 
-  async function apiCall(options, fullResponse=false) {
-    const resData = await axios(options)
-    .then(res => {
-      //if (verbose) {
-        console.log(res.status)
-      //  console.log(res)
-      //}
+ const responseDataFromAPIcall = await apiCall(options);
+//
+async function apiCall(options, fullResponse=false) {
+  const resData = await axios(options).then(res => {
+      if ("verbose" in args && args.verbose){
+          console.log(`response status code: ${res.status}`)
+          zenodoMessage(res.status)
+      }
+    
       if (fullResponse) {
         return res;    
-      } else {
+       }
+       
+      else {
         return res.data;
       }
     }).catch(err => {
       axiosError(err)
     });
+    
     return resData
 
-  }
+  } // end apiCall function
 
-*/
-   
-  /*
-  option to zenodo-cli --verbose
-  if (verbose) {
-    console.log(zenodoMessage(res.status))
-  }
-  */
-  return resData
+  return responseDataFromAPIcall;
+
 }
 
-//TODO:
+
 async function axiosError(error) {
   if (error.response) {
     console.log("The request was made and the server responded with a status code that falls out of the range of 2xx")
     console.log(`ZENODO: Error in creating new record (other than 201)`);
     console.log("ZENODO: List of error codes: https://developers.zenodo.org/?shell#http-status-codes");
-    // zenodoMessage(".....")
-    console.log(error.response.data);
     console.log(error.response.status);
+    zenodoMessage(error.response.status);
+    console.log(error.response.data);
     console.log(error.response.headers);
   } else if (error.request) {
     console.log(`The request was made but no response was received
@@ -495,25 +480,58 @@ export async function create(args) {
   }
 }
 
-// TODO
-/*
-async function zenodoMessage(number) {
-  let errorMessage = "Did not understand error code: " + String(number)
-  const zenodoErrors = `Code	Name	Description
-200	OK	Request succeeded. Response included. Usually sent for GET/PUT/PATCH requests.
-201	Created	Request succeeded. Response included. Usually sent for POST requests.
-202	Accepted	Request succeeded. Response included. Usually sent for POST requests, where background processing is needed to fulfill the request.
-204	No Content	Request succeeded. No response included. Usually sent for DELETE requests.
-400	Bad Request	Request failed. Error response included.
-401	Unauthorized	Request failed, due to an invalid access token. Error response included.
-403	Forbidden	Request failed, due to missing authorization (e.g. deleting an already submitted upload or missing scopes for your access token). Error response included.
-404	Not Found	Request failed, due to the resource not being found. Error response included.
-405	Method Not Allowed	Request failed, due to unsupported HTTP method. Error response included.
-409	Conflict	Request failed, due to the current state of the resource (e.g. edit a deopsition which is not fully integrated). Error response included.
-415	Unsupported Media Type	Request failed, due to missing or invalid request header Content-Type. Error response included.
-429	Too Many Requests	Request failed, due to rate limiting. Error response included.
-500	Internal Server Error	Request failed, due to an internal server error. Error response NOT included. Don’t worry, Zenodo admins have been notified and will be dealing with the problem ASAP.`
-  return errorMessage;
+
+function zenodoMessage(number) {
+  
+   if(number === 200)
+   console.log(`${number}: OK	Request succeeded. Response included. Usually sent for GET/PUT/PATCH requests`);
+   else if(number === 201)
+   console.log(`${number}: Created	Request succeeded. Response included. Usually sent for POST requests.`);
+   else if(number === 202)
+   console.log(`${number}: Accepted	Request succeeded. Response included. Usually sent for POST requests, where background processing is needed to fulfill the request.`);
+   else if(number === 204)
+   console.log(`${number}: No Content	Request succeeded. No response included. Usually sent for DELETE requests.`);
+   else if(number === 400)
+   console.log(`${number}: Bad Request	Request failed. Error response included.`);
+   else if(number === 401)
+   console.log(`${number}: Unauthorized	Request failed, due to an invalid access token. Error response included.`);
+   else if(number === 403)
+   console.log(`${number}: Forbidden	Request failed, due to missing authorization (e.g. deleting an already submitted upload or missing scopes for your access token). Error response included.`);
+   else if(number === 404)
+   console.log(`${number}: Not Found	Request failed, due to the resource not being found. Error response included.`);
+   else if(number === 405)
+   console.log(`${number}: Method Not Allowed	Request failed, due to unsupported HTTP method. Error response included.`);
+   else if(number === 409)
+   console.log(`${number}: Conflict	Request failed, due to the current state of the resource (e.g. edit a deopsition which is not fully integrated). Error response included.`);
+   else if(number === 415)
+   console.log(`${number}: Unsupported Media Type	Request failed, due to missing or invalid request header Content-Type. Error response included.`);
+   else if(number === 429)
+   console.log(`${number}: Too Many Requests	Request failed, due to rate limiting. Error response included.`);
+   else
+   console.log(`${number}: Internal Server Error	Request failed, due to an internal server error. Error response NOT included. Don’t worry, Zenodo admins have been notified and will be dealing with the problem ASAP.`);
+  
 }
-*/
+
+
+
+/* OLD axios post code:
+  const options = { headers: { 'Content-Type': "application/json" }, params: params }
+  const resData = await axios.post(zenodoAPIUrl, JSON.stringify(payload), options)
+  .then(res => {
+  if (verbose) {
+  console.log(res.status)
+  zenodoMessage(res.status)
+  console.log(res)
+  }
+  return res.data;
+  }).catch(err => {
+  axiosError(err)
+  });
+   
+  /*
+  option to zenodo-cli --verbose
+  if (verbose) {
+    console.log(zenodoMessage(res.status))
+  }
+  */
 

@@ -134,6 +134,13 @@ parser_create.add_argument("--dump", {
   "help": "Show json for deposition after executing the command.",
   "default": false
 });
+
+parser_create.add_argument("--verbose", {
+  "action": "store_true",
+  "help": "Show response status after calling the API",
+  "default": false
+});
+
 parser_create.set_defaults({ "func": create });
 
 const parser_duplicate = subparsers.add_parser("duplicate", { "help": "The duplicate command duplicates the id to a new id, optionally providing a title / date / description / files." });
