@@ -1,6 +1,11 @@
 import axios from 'axios';
 import * as fs from "fs";
 import opn from 'opn';
+//for catch:
+//import { catchError } from 'rxjs/operators';
+
+//for throw:
+//import { Observable, throwError } from 'rxjs';
 
 
 import {
@@ -84,9 +89,7 @@ async function createRecord(args, metadata) {
   console.log(JSON.stringify(payload))
   const options = { headers: { 'Content-Type': "application/json" }, params: params }
   const res = await axios.post(zenodoAPIUrl, JSON.stringify(payload), options)
-    .catch(function (error) {
-      axiosError(error)
-    });
+  .catch(err =>(err));
   /*
   option to zenodo-cli --verbose
   if (verbose) {
@@ -96,7 +99,8 @@ async function createRecord(args, metadata) {
   return res.data;
 
 }
-
+/*
+TODO:
 function axiosError(error) {
   if (error.response) {
     console.log("The request was made and the server responded with a status code that falls out of the range of 2xx")
@@ -118,10 +122,12 @@ function axiosError(error) {
   console.log(`Fatal error in create->axios.post: ${error}`);
   process.exit(1);
 };
+*/
 
 async function editDeposit(args, dep_id) {
   const { zenodoAPIUrl, params } = loadConfig(args.config);
-  const res = await axios.post(`${zenodoAPIUrl}/${parseId(dep_id)}/actions/edit`, { "params": params });
+  const options = { headers: { 'Content-Type': "application/json" }, params: params }
+  const res = await axios.post(`${zenodoAPIUrl}/${parseId(dep_id)}/actions/edit`, options);
   if ((res.status !== 201)) {
     console.log(`Error in making record editable. ${res.data}`);
     process.exit(1);
@@ -134,10 +140,13 @@ async function updateRecord(args, dep_id, metadata) {
   const { zenodoAPIUrl, params } = loadConfig(args.config);
   const payload = { "metadata": metadata }
   const options = { headers: { 'Content-Type': "application/json" }, params: params }
-  const res = await axios.put(`${zenodoAPIUrl}/${parseId(dep_id)}`, payload, options).catch(function (error) {
-    axiosError(error)
-  });
-  return res.data;
+  console.log(`${zenodoAPIUrl}/${parseId(dep_id)}`);
+  await axios.put(`${zenodoAPIUrl}/${parseId(dep_id)}`, payload, options)
+  .then(function(result) {
+    console.log(result.data);
+    return result.data; // "Some User token"
+  })
+  
 }
 
 async function fileUpload(args, bucket_url, journal_filepath) {
@@ -240,22 +249,43 @@ export async function upload(args) {
 
 export async function update(args) {
   var bucket_url, data, deposit_url, id, metadata, response_data;
-  id = parseId(args.id[0]);
-  data = await getData(args, id);
-  metadata = data["metadata"];
-  console.log(`metadata: ${JSON.stringify(data)}`)
-  if ((data["state"] === "done")) {
-    console.log("\tMaking record editable.");
-    response_data = editDeposit(args, id);
-  };
+  id = parseIds(args.id);
+  data = await getData(args, id);  
+  /*
+
+  let data, ids;
+  ids = parseIds(args.id);
+  ids.forEach(async function (id) {
+    data = await getData(args, id);
+    let path = `${id}.json`;
+    let buffer = Buffer.from(JSON.stringify(data["metadata"]));
+    fs.open(path, 'w', function (err, fd) {
+      if (err) {
+        throw 'could not open file: ' + err;
+      }
+      // write the contents of the buffer, from position 0 to the end, to the file descriptor returned in opening our file
+      fs.write(fd, buffer, 0, buffer.length, null, function (err) {
+        if (err) throw 'error writing file: ' + err;
+        fs.close(fd, function () {
+          console.log('wrote the file successfully');
+        });
+      });
+    });
+    await finalActions(args, id, data["links"]["html"]);
+  })
+}
+
+  */
+  metadata = JSON.stringify(data["metadata"]);
+  console.log("\tMaking record editable.");
+  response_data = editDeposit(args, id);
   console.log("\tUpdating record.");
   metadata = updateMetadata(args, metadata);
   response_data = updateRecord(args, id, metadata);
-  console.log(response_data);
   bucket_url = response_data["links"]["bucket"];
   deposit_url = response_data["links"]["html"];
   if (args.files) {
-    args.files.forEach(async function (filePath) {
+      args.files.forEach(async function (filePath) {
       await fileUpload(args, bucket_url, filePath);
     })
   }
@@ -414,6 +444,7 @@ export async function create(args) {
 }
 
 // TODO
+/*
 function zenodoMessage(number) {
   let errorMessage = "Did not understand error code: " + String(number)
   const zenodoErrors = `Code	Name	Description
@@ -432,3 +463,5 @@ function zenodoMessage(number) {
 500	Internal Server Error	Request failed, due to an internal server error. Error response NOT included. Don’t worry, Zenodo admins have been notified and will be dealing with the problem ASAP.`
   return errorMessage;
 }
+
+*/

@@ -26,6 +26,10 @@ exports.create = exports.concept = exports.download = exports.newVersion = expor
 const axios_1 = __importDefault(require("axios"));
 const fs = __importStar(require("fs"));
 const opn_1 = __importDefault(require("opn"));
+//for catch:
+//import { catchError } from 'rxjs/operators';
+//for throw:
+//import { Observable, throwError } from 'rxjs';
 const helper_1 = require("./helper");
 async function publishDeposition(args, id) {
     id = helper_1.parseId(id);
@@ -98,9 +102,7 @@ async function createRecord(args, metadata) {
     console.log(JSON.stringify(payload));
     const options = { headers: { 'Content-Type': "application/json" }, params: params };
     const res = await axios_1.default.post(zenodoAPIUrl, JSON.stringify(payload), options)
-        .catch(function (error) {
-        axiosError(error);
-    });
+        .catch(err => (err));
     /*
     option to zenodo-cli --verbose
     if (verbose) {
@@ -109,33 +111,34 @@ async function createRecord(args, metadata) {
     */
     return res.data;
 }
+/*
+TODO:
 function axiosError(error) {
-    if (error.response) {
-        console.log("The request was made and the server responded with a status code that falls out of the range of 2xx");
-        console.log(`ZENODO: Error in creating new record (other than 201)`);
-        console.log("ZENODO: List of error codes: https://developers.zenodo.org/?shell#http-status-codes");
-        console.log(error.response.data);
-        console.log(error.response.status);
-        console.log(error.response.headers);
-    }
-    else if (error.request) {
-        console.log(`The request was made but no response was received
+  if (error.response) {
+    console.log("The request was made and the server responded with a status code that falls out of the range of 2xx")
+    console.log(`ZENODO: Error in creating new record (other than 201)`);
+    console.log("ZENODO: List of error codes: https://developers.zenodo.org/?shell#http-status-codes");
+    console.log(error.response.data);
+    console.log(error.response.status);
+    console.log(error.response.headers);
+  } else if (error.request) {
+    console.log(`The request was made but no response was received
     'error.request' is an instance of XMLHttpRequest in the browser and an instance of
     http.ClientRequest in node.js`);
-        console.log(error.request);
-    }
-    else {
-        console.log("Something happened in setting up the request that triggered an Error");
-        console.log('Error', error.message);
-    }
-    console.log(error.config);
-    console.log(`Fatal error in create->axios.post: ${error}`);
-    process.exit(1);
-}
-;
+    console.log(error.request);
+  } else {
+    console.log("Something happened in setting up the request that triggered an Error")
+    console.log('Error', error.message);
+  }
+  console.log(error.config);
+  console.log(`Fatal error in create->axios.post: ${error}`);
+  process.exit(1);
+};
+*/
 async function editDeposit(args, dep_id) {
     const { zenodoAPIUrl, params } = helper_1.loadConfig(args.config);
-    const res = await axios_1.default.post(`${zenodoAPIUrl}/${helper_1.parseId(dep_id)}/actions/edit`, { "params": params });
+    const options = { headers: { 'Content-Type': "application/json" }, params: params };
+    const res = await axios_1.default.post(`${zenodoAPIUrl}/${helper_1.parseId(dep_id)}/actions/edit`, options);
     if ((res.status !== 201)) {
         console.log(`Error in making record editable. ${res.data}`);
         process.exit(1);
@@ -147,10 +150,12 @@ async function updateRecord(args, dep_id, metadata) {
     const { zenodoAPIUrl, params } = helper_1.loadConfig(args.config);
     const payload = { "metadata": metadata };
     const options = { headers: { 'Content-Type': "application/json" }, params: params };
-    const res = await axios_1.default.put(`${zenodoAPIUrl}/${helper_1.parseId(dep_id)}`, payload, options).catch(function (error) {
-        axiosError(error);
+    console.log(`${zenodoAPIUrl}/${helper_1.parseId(dep_id)}`);
+    await axios_1.default.put(`${zenodoAPIUrl}/${helper_1.parseId(dep_id)}`, payload, options)
+        .then(function (result) {
+        console.log(result.data);
+        return result.data; // "Some User token"
     });
-    return res.data;
 }
 async function fileUpload(args, bucket_url, journal_filepath) {
     const { params } = helper_1.loadConfig(args.config);
@@ -253,19 +258,39 @@ async function upload(args) {
 exports.upload = upload;
 async function update(args) {
     var bucket_url, data, deposit_url, id, metadata, response_data;
-    id = helper_1.parseId(args.id[0]);
+    id = helper_1.parseIds(args.id);
     data = await getData(args, id);
-    metadata = data["metadata"];
-    console.log(`metadata: ${JSON.stringify(data)}`);
-    if ((data["state"] === "done")) {
-        console.log("\tMaking record editable.");
-        response_data = editDeposit(args, id);
-    }
-    ;
+    /*
+  
+    let data, ids;
+    ids = parseIds(args.id);
+    ids.forEach(async function (id) {
+      data = await getData(args, id);
+      let path = `${id}.json`;
+      let buffer = Buffer.from(JSON.stringify(data["metadata"]));
+      fs.open(path, 'w', function (err, fd) {
+        if (err) {
+          throw 'could not open file: ' + err;
+        }
+        // write the contents of the buffer, from position 0 to the end, to the file descriptor returned in opening our file
+        fs.write(fd, buffer, 0, buffer.length, null, function (err) {
+          if (err) throw 'error writing file: ' + err;
+          fs.close(fd, function () {
+            console.log('wrote the file successfully');
+          });
+        });
+      });
+      await finalActions(args, id, data["links"]["html"]);
+    })
+  }
+  
+    */
+    metadata = JSON.stringify(data["metadata"]);
+    console.log("\tMaking record editable.");
+    response_data = editDeposit(args, id);
     console.log("\tUpdating record.");
     metadata = helper_1.updateMetadata(args, metadata);
     response_data = updateRecord(args, id, metadata);
-    console.log(response_data);
     bucket_url = response_data["links"]["bucket"];
     deposit_url = response_data["links"]["html"];
     if (args.files) {
@@ -428,9 +453,10 @@ async function create(args) {
 }
 exports.create = create;
 // TODO
+/*
 function zenodoMessage(number) {
-    let errorMessage = "Did not understand error code: " + String(number);
-    const zenodoErrors = `Code	Name	Description
+  let errorMessage = "Did not understand error code: " + String(number)
+  const zenodoErrors = `Code	Name	Description
 200	OK	Request succeeded. Response included. Usually sent for GET/PUT/PATCH requests.
 201	Created	Request succeeded. Response included. Usually sent for POST requests.
 202	Accepted	Request succeeded. Response included. Usually sent for POST requests, where background processing is needed to fulfill the request.
@@ -443,7 +469,9 @@ function zenodoMessage(number) {
 409	Conflict	Request failed, due to the current state of the resource (e.g. edit a deopsition which is not fully integrated). Error response included.
 415	Unsupported Media Type	Request failed, due to missing or invalid request header Content-Type. Error response included.
 429	Too Many Requests	Request failed, due to rate limiting. Error response included.
-500	Internal Server Error	Request failed, due to an internal server error. Error response NOT included. Don’t worry, Zenodo admins have been notified and will be dealing with the problem ASAP.`;
-    return errorMessage;
+500	Internal Server Error	Request failed, due to an internal server error. Error response NOT included. Don’t worry, Zenodo admins have been notified and will be dealing with the problem ASAP.`
+  return errorMessage;
 }
+
+*/
 //# sourceMappingURL=functions.js.map

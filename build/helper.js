@@ -60,16 +60,16 @@ exports.loadConfig = loadConfig;
 // TODO
 function parseId(id) {
     var dot_split, slash_split;
-    if (!isNaN(id.toString())) {
+    if (!(isNaN(id.toString()))) {
         return id;
     }
     slash_split = id.toString().split("/").slice((-1))[0];
-    if (!isNaN(slash_split)) {
+    if (!(isNaN(slash_split))) {
         id = slash_split;
     }
     else {
         dot_split = id.toString().split(".").slice((-1))[0];
-        if (!isNaN(dot_split)) {
+        if (!(isNaN(dot_split))) {
             id = dot_split;
         }
     }
