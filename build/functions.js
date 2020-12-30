@@ -57,14 +57,24 @@ async function getData(args, id) {
             process.exit(1);
         }
         else {
-            console.log("Checking helper ID.");
+            // Getting record id faied, check whether the id is a concept id.
+            /*
+            1000 <-- concept id
+            1001 <-- record
+            5325 <-- new record id (concept id of 1000)
+            getData(5325) -> record data for 5325
+            getData(1000) -> record id = 5325 -> record data for 5325
+            */
+            console.log("Checking concept ID.");
             const listParams = params;
             listParams["q"] = ("conceptrecid:" + id);
             res = await axios_1.default.get(zenodoAPIUrl, { "params": listParams });
             if ((res.status !== 200)) {
+                // We still could not get any data - the id provided is neither a record nor a concept:
                 console.log(`Failed in getting data: ${res.data}`);
             }
             else {
+                // The id was a concept id, and located the record:
                 console.log(("Found record ID: " + res.data[0]["id"].toString()));
                 return res.data[0];
             }
@@ -105,6 +115,7 @@ async function createRecord(args, metadata) {
         .then(res => {
         //if (verbose) {
         console.log(res.status);
+        zenodoMessage(res.status);
         //  console.log(res)
         //}
         return res.data;
@@ -112,12 +123,19 @@ async function createRecord(args, metadata) {
         axiosError(err);
     });
     /*
-       TODO:
-      const options = { headers: { 'Content-Type': "application/json" }, params: params, mode: "post" }
-      const resData = await apiCall(zenodoAPIUrl, JSON.stringify(payload), options)
+       TODO: Test that if works.
     
-      async function apiCall(url, payload, options, fullResponse=false) {
-        const resData = await axiosXXXXXXXX(url, payload, options)
+      const options = {
+        method: "post",
+        url: zenodoAPIUrl,
+        params: params,
+        headers: { 'Content-Type': "application/json" },
+        data: payload
+      }
+      const resData = await apiCall(options)
+    
+      async function apiCall(options, fullResponse=false) {
+        const resData = await axios(options)
         .then(res => {
           //if (verbose) {
             console.log(res.status)
@@ -150,6 +168,7 @@ async function axiosError(error) {
         console.log("The request was made and the server responded with a status code that falls out of the range of 2xx");
         console.log(`ZENODO: Error in creating new record (other than 201)`);
         console.log("ZENODO: List of error codes: https://developers.zenodo.org/?shell#http-status-codes");
+        // zenodoMessage(".....")
         console.log(error.response.data);
         console.log(error.response.status);
         console.log(error.response.headers);
@@ -489,7 +508,7 @@ async function create(args) {
 exports.create = create;
 // TODO
 /*
-function zenodoMessage(number) {
+async function zenodoMessage(number) {
   let errorMessage = "Did not understand error code: " + String(number)
   const zenodoErrors = `Code	Name	Description
 200	OK	Request succeeded. Response included. Usually sent for GET/PUT/PATCH requests.
@@ -507,6 +526,5 @@ function zenodoMessage(number) {
 500	Internal Server Error	Request failed, due to an internal server error. Error response NOT included. Don’t worry, Zenodo admins have been notified and will be dealing with the problem ASAP.`
   return errorMessage;
 }
-
 */
 //# sourceMappingURL=functions.js.map

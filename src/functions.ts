@@ -101,7 +101,7 @@ async function createRecord(args, metadata) {
   .then(res => {
     //if (verbose) {
       console.log(res.status)
-      zenodoMessage(res.status)
+     // zenodoMessage(res.status)
     //  console.log(res)
     //}
     return res.data;
