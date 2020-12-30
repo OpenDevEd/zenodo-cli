@@ -112,6 +112,31 @@ async function createRecord(args, metadata) {
         axiosError(err);
     });
     /*
+       TODO:
+      const options = { headers: { 'Content-Type': "application/json" }, params: params, mode: "post" }
+      const resData = await apiCall(zenodoAPIUrl, JSON.stringify(payload), options)
+    
+      async function apiCall(url, payload, options, fullResponse=false) {
+        const resData = await axiosXXXXXXXX(url, payload, options)
+        .then(res => {
+          //if (verbose) {
+            console.log(res.status)
+          //  console.log(res)
+          //}
+          if (fullResponse) {
+            return res;
+          } else {
+            return res.data;
+          }
+        }).catch(err => {
+          axiosError(err)
+        });
+        return resData
+    
+      }
+    
+    */
+    /*
     option to zenodo-cli --verbose
     if (verbose) {
       console.log(zenodoMessage(res.status))
