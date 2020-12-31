@@ -47,7 +47,7 @@ async function apiCall(args, options, fullResponse = false) {
         axiosError(err);
         console.log(err);
     });
-    return resData.data;
+    return resData;
 }
 async function publishDeposition(args, id) {
     id = helper_1.parseId(id);
@@ -188,7 +188,7 @@ async function editDeposit(args, dep_id, payload) {
         headers: { 'Content-Type': "application/json" },
         data: payload
     };
-    const responseDataFromAPIcall = await apiCall(args, options);
+    const responseDataFromAPIcall = await apiCall(args, options, false);
     return responseDataFromAPIcall;
     //const res = await axios.post(`${zenodoAPIUrl}/${parseId(dep_id)}/actions/edit`, options);
     //if ((res.status !== 201)) {
@@ -546,13 +546,15 @@ async function axiosError(error) {
     http.ClientRequest in node.js`);
         console.log(error.request);
     }
+    else if (error.config) {
+        console.log(error.config);
+        console.log(`Fatal error in create->axios.post: ${error}`);
+    }
     else {
         console.log("Something happened in setting up the request that triggered an Error");
         console.log('Error', error.message);
     }
-    console.log(error.config);
-    console.log(`Fatal error in create->axios.post: ${error}`);
-    process.exit(1);
+    //process.exit(1);
 }
 ;
 function zenodoMessage(number) {

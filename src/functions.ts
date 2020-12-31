@@ -35,7 +35,7 @@ async function apiCall(args,options, fullResponse=false) {
       console.log(err);
     });
     
-    return resData.data;
+    return resData;
 
   }
 
@@ -203,7 +203,7 @@ async function editDeposit(args, dep_id,payload) {
     data: payload
   }
 
-  const responseDataFromAPIcall = await apiCall(args,options);
+  const responseDataFromAPIcall = await apiCall(args,options,false);
   return responseDataFromAPIcall;
 
   //const res = await axios.post(`${zenodoAPIUrl}/${parseId(dep_id)}/actions/edit`, options);
@@ -370,7 +370,7 @@ export async function update(args) {
   
 
   //console.log("\tMaking record editable.");
-  let response = await editDeposit(args, id,metadata);
+  let response =  await editDeposit(args, id,metadata);
    console.log(`response editDeposit:${response}`);
    process.exit(1);
   //console.log("\tUpdating metadata.");
@@ -577,13 +577,15 @@ async function axiosError(error) {
     'error.request' is an instance of XMLHttpRequest in the browser and an instance of
     http.ClientRequest in node.js`);
     console.log(error.request);
-  } else {
+  }else if(error.config){
+     console.log(error.config);
+     console.log(`Fatal error in create->axios.post: ${error}`);
+  }else{
     console.log("Something happened in setting up the request that triggered an Error")
     console.log('Error', error.message);
   }
-  console.log(error.config);
-  console.log(`Fatal error in create->axios.post: ${error}`);
-  process.exit(1);
+  
+  //process.exit(1);
 };
 
 
