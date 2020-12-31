@@ -84,8 +84,6 @@ async function checkingConcept(args, id) {
    The id was a concept id, and located the record:
    console.log(("Found record ID: " + res.data[0]["id"].toString()));
   
-  
-  
     */
 }
 async function getData(args, id) {
@@ -94,6 +92,15 @@ async function getData(args, id) {
     id = helper_1.parseId(id);
     console.log(id);
     console.log(`${zenodoAPIUrl}/${id}`);
+    /* //TODO:
+    const options = {
+      method: 'get',
+      url: `${zenodoAPIUrl}/${id}`,
+      params: params,
+      headers: { 'Content-Type': "application/json" },
+    }
+    const responseDataFromAPIcall = await apiCall(args, options);
+    */
     let resData = await axios_1.default.get(`${zenodoAPIUrl}/${id}`, { "params": params })
         .then(async (res) => {
         console.log(res.status);
