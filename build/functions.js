@@ -52,13 +52,17 @@ async function apiCall(args, options, fullResponse = false) {
 async function publishDeposition(args, id) {
     id = helper_1.parseId(id);
     const { zenodoAPIUrl, params } = helper_1.loadConfig(args.config);
-    const res = await axios_1.default.post(`${zenodoAPIUrl}/${id}/actions/publish`, { "params": params });
-    if ((res.data !== 202)) {
-        console.log(`Error in publshing deposition ${id}: `, res.data);
+    if ("verbose" in args && args.verbose) {
+        console.log(`publishDeposition`);
     }
-    else {
-        console.log(`\tDeposition ${id} successfully published.`);
-    }
+    const options = {
+        method: 'post',
+        url: `${zenodoAPIUrl}/${id}/actions/publish`,
+        params: params,
+        headers: { 'Content-Type': "application/json" },
+    };
+    const responseDataFromAPIcall = await apiCall(args, options);
+    return responseDataFromAPIcall;
 }
 async function showDeposition(args, id) {
     const info = await getData(args, helper_1.parseId(id));
@@ -71,7 +75,7 @@ async function checkingConcept(args, id) {
     let res = await axios_1.default.get(zenodoAPIUrl, { "params": listParams });
     return res.data[0];
     /*
-
+  
          
    console.log("Checking concept ID.");
    const listParams = params;
@@ -79,9 +83,9 @@ async function checkingConcept(args, id) {
    let res = await axios.get(zenodoAPIUrl, { "params": listParams });
    The id was a concept id, and located the record:
    console.log(("Found record ID: " + res.data[0]["id"].toString()));
-
-
-
+  
+  
+  
     */
 }
 async function getData(args, id) {
@@ -178,15 +182,28 @@ async function createRecord(args, metadata) {
     const responseDataFromAPIcall = await apiCall(args, options);
     return responseDataFromAPIcall;
 }
-async function editDeposit(args, dep_id, payload) {
-    console.log("\tEditDeposit.");
-    const { zenodoAPIUrl, params } = helper_1.loadConfig(args.config);
+async function editDeposit(args, dep_id) {
+    /*
+    Unlock already submitted deposition for editing.
+    
+    curl -i -X POST https://zenodo.org/api/deposit/depositions/1234/actions/edit?access_token=ACCESS_TOKEN
+    HTTP Request
+    POST /api/deposit/depositions/:id/actions/edit
+    
+    Scopes
+    deposit:actions
+    
+    Success response
+    Code: 201 Created
+    Body: a deposition resource.
+    */
+    console.log("\tMaking deposit editable (actions/edit).");
+    const { params, zenodoAPIUrl } = helper_1.loadConfig(args.config);
     const options = {
         method: 'post',
         url: `${zenodoAPIUrl}/${helper_1.parseId(dep_id)}/actions/edit`,
         params: params,
         headers: { 'Content-Type': "application/json" },
-        data: payload
     };
     const responseDataFromAPIcall = await apiCall(args, options, false);
     return responseDataFromAPIcall;
@@ -199,9 +216,12 @@ async function editDeposit(args, dep_id, payload) {
 }
 async function updateRecord(args, dep_id, metadata) {
     console.log("\tUpdating record.");
-    const { zenodoAPIUrl, params } = helper_1.loadConfig(args.config);
+    //-->
+    const { params, zenodoAPIUrl } = helper_1.loadConfig(args.config);
     const payload = { "metadata": metadata };
-    //console.log(JSON.stringify(payload))
+    console.log(JSON.stringify(params));
+    console.log(JSON.stringify(zenodoAPIUrl));
+    process.exit(1);
     const options = {
         method: 'put',
         url: `${zenodoAPIUrl}/${helper_1.parseId(dep_id)}`,
@@ -337,27 +357,18 @@ async function update(args) {
     id = helper_1.parseIds(args.id);
     data = await getData(args, id);
     //console.log(data)
-    metadata = JSON.stringify(data["metadata"]);
+    metadata = data["metadata"];
     //console.log(metadata);
-    //console.log("\tMaking record editable.");
-    let response = await editDeposit(args, id, metadata);
-    console.log(`response editDeposit:${response}`);
-    process.exit(1);
+    if (data.submitted == true && data.state == 'done') {
+        console.log("\tMaking record editable.");
+        let response = await editDeposit(args, id);
+        console.log(`response editDeposit:${response}`);
+    }
+    //process.exit(1);
     //console.log("\tUpdating metadata.");
     let metadataNew = await helper_1.updateMetadata(args, metadata);
-    //CHECKING WHY:Here the metada get back with \\ 
-    /*
-     data: '{"metadata":"{\\"access_right\\":\\"open\\",\\"communities\\"
-     :[{\\"identifier\\":\\"zenodo\\"}],\\"creators\\":[{\\"affiliation\\"
-     :\\"No affiliation available.\\",\\"name\\":\\"No name available.\\"}]
-     ,\\"description\\":\\"No description available.\\",\\"doi\\":\\"\\",\\
-     "license\\":\\"CC-BY-4.0\\",\\"prereserve_doi\\":{\\"doi\\":\\"10.5072/
-     zenodo.712078\\",\\"recid\\":712078},\\"publication_date\\":\\"2020-12-31\\
-     ",\\"publication_type\\":\\"report\\",\\"title\\":\\"No title available.\\"
-     ,\\"upload_type\\":\\"publication\\"}"}'
-    */
-    response = await updateRecord(args, id, metadataNew);
-    console.log(response);
+    let response2 = await updateRecord(args, id, metadataNew);
+    console.log(response2);
     /*
   
       data: {
@@ -368,8 +379,8 @@ async function update(args) {
   
     */
     //process.exit(1);
-    bucket_url = response["links"]["bucket"];
-    deposit_url = response["links"]["html"];
+    bucket_url = response2["links"]["bucket"];
+    deposit_url = response2["links"]["html"];
     if (args.files) {
         args.files.forEach(async function (filePath) {
             await fileUpload(args, bucket_url, filePath);
@@ -598,7 +609,7 @@ function zenodoMessage(number) {
   }).catch(err => {
   axiosError(err)
   });
-   
+
   /*
   option to zenodo-cli --verbose
   if (verbose) {
