@@ -32,16 +32,58 @@ async function showDeposition(args, id) {
   showDepositionJSON(info);
 }
 
+async function checkingConcept(args, id) {
+  const { zenodoAPIUrl, params } = loadConfig(args.config);
+  const listParams = params;
+  listParams["q"] = ("conceptrecid:" + id);
+  let res = await axios.get(zenodoAPIUrl, { "params": listParams }); 
+       return res.data[0];
+}
+
 async function getData(args, id) {
   const { zenodoAPIUrl, params } = loadConfig(args.config);
   console.log(`getting data`);
   id = parseId(id);
-  let res = await axios.get(`${zenodoAPIUrl}/${id}`, { "params": params });
+  console.log(id);
+  console.log(`${zenodoAPIUrl}/${id}`);
+  let resData = await axios.get(`${zenodoAPIUrl}/${id}`, { "params": params })
+  .then(res=>{
+
+  console.log(res.status);
+  if ((res.status !== 200)) {
+
+    if ((res.status["status"] !== 404)) {
+      console.log(`Error in getting data: ${res.data}`);
+      process.exit(1);
+    } else{
+
+      let res = checkingConcept(args, id)
+      
+      //console.log("Checking concept ID.");
+     // const listParams = params;
+     // listParams["q"] = ("conceptrecid:" + id);
+     // let res = await axios.get(zenodoAPIUrl, { "params": listParams });
+        // The id was a concept id, and located the record:
+      //  console.log(("Found record ID: " + res.data[0]["id"].toString()));
+        return res;
+
+    } 
+  } else{
+    return res.data
+    }
+  });
+
+return resData;
+  
+}
+  
+  /*
   if ((res.status !== 200)) {
     if ((res.status["status"] !== 404)) {
       console.log(`Error in getting data: ${res.data}`);
       process.exit(1);
-    } else {
+    } 
+    else if (res.status === 404) {
       // Getting record id faied, check whether the id is a concept id.
       /*
       1000 <-- concept id
@@ -49,27 +91,27 @@ async function getData(args, id) {
       5325 <-- new record id (concept id of 1000)
       getData(5325) -> record data for 5325
       getData(1000) -> record id = 5325 -> record data for 5325
-      */ 
+      
       console.log("Checking concept ID.");
       const listParams = params;
       listParams["q"] = ("conceptrecid:" + id);
       res = await axios.get(zenodoAPIUrl, { "params": listParams });
-      if ((res.status !== 200)) {
-        // We still could not get any data - the id provided is neither a record nor a concept:
-        console.log(`Failed in getting data: ${res.data}`);
-      } else {
         // The id was a concept id, and located the record:
         console.log(("Found record ID: " + res.data[0]["id"].toString()));
         return res.data[0];
-      }
     }
-  } else {
-    return res.data;
+       
   }
-}
+  else{
+    return res.data
+  }
+  */
+ 
+  
+
 
 async function getMetadata(args, id) {
-  return getData(args, id)["metadata"];
+  return await getData(args, id)["metadata"];
 }
 
 async function createRecord(args, metadata) {
@@ -172,17 +214,60 @@ async function editDeposit(args, dep_id) {
 }
 
 async function updateRecord(args, dep_id, metadata) {
+ 
+  
+  console.log("\tUpdating record.");
+  const { zenodoAPIUrl, params } = loadConfig(args.config);
+  const payload = { "metadata": metadata }
+  //console.log(JSON.stringify(payload))
+  const options = { 
+    method: 'put', 
+    url: `${zenodoAPIUrl}/${parseId(dep_id)}`, 
+    params: params, 
+    headers: { 'Content-Type': "application/json" }, 
+    data: payload
+  }
+
+ const responseDataFromAPIcall = await apiCall(options);
+
+ async function apiCall(options, fullResponse=false) {
+  const resData = await axios(options).then(res => {
+      if ("verbose" in args && args.verbose){
+          console.log(`response status code: ${res.status}`)
+          zenodoMessage(res.status)
+      }
+    
+      if (fullResponse) {
+        return res;    
+       }
+       
+      else {
+        return res.data;
+      }
+    }).catch(err => {
+      axiosError(err)
+    });
+    
+    return resData
+
+  } // end apiCall function
+
+  return responseDataFromAPIcall;
+
+  
+  /*
   console.log("\tUpdating record.");
   const { zenodoAPIUrl, params } = loadConfig(args.config);
   const payload = { "metadata": metadata }
   const options = { headers: { 'Content-Type': "application/json" }, params: params }
   console.log(`${zenodoAPIUrl}/${parseId(dep_id)}`);
-  await axios.put(`${zenodoAPIUrl}/${parseId(dep_id)}`, payload, options)
-    .then(function (result) {
-      console.log(result.data);
-      return result.data; // "Some User token"
+  let response = await axios.put(`${zenodoAPIUrl}/${parseId(dep_id)}`, payload, options)
+  .then(res => {
+      console.log(res.data);
+      return res.data; // "Some User token"
     })
-
+   return response;
+   */
 }
 
 async function fileUpload(args, bucket_url, journal_filepath) {
@@ -227,7 +312,10 @@ export async function saveIdsToJson(args) {
       if (err) {
         throw 'could not open file: ' + err;
       }
-      // write the contents of the buffer, from position 0 to the end, to the file descriptor returned in opening our file
+      /*
+       write the contents of the buffer, from position 0 to the end, to the file descriptor 
+      returned in opening our file
+      */
       fs.write(fd, buffer, 0, buffer.length, null, function (err) {
         if (err) throw 'error writing file: ' + err;
         fs.close(fd, function () {
@@ -247,10 +335,13 @@ export async function dumpDeposition(args, id) {
 export async function duplicate(args) {
   var bucket_url, deposit_url, metadata, response_data;
   metadata = getMetadata(args, args.id[0]);
+  console.log(JSON.stringify(metadata));
   delete metadata["doi"];
   metadata["prereserve_doi"] = true;
   metadata = updateMetadata(args, metadata);
+  //console.log(JSON.stringify(metadata));
   response_data = createRecord(args, metadata);
+  console.log(JSON.stringify(response_data));
   bucket_url = response_data["links"]["bucket"];
   deposit_url = response_data["links"]["html"];
   if (args.files) {
@@ -284,40 +375,25 @@ export async function upload(args) {
 }
 
 export async function update(args) {
-  var bucket_url, data, deposit_url, id, metadata, response_data;
+  let bucket_url, data, deposit_url, id;
+  let metadata;
+  let response_data;
   id = parseIds(args.id);
   data = await getData(args, id);
-  /*
-
-  let data, ids;
-  ids = parseIds(args.id);
-  ids.forEach(async function (id) {
-    data = await getData(args, id);
-    let path = `${id}.json`;
-    let buffer = Buffer.from(JSON.stringify(data["metadata"]));
-    fs.open(path, 'w', function (err, fd) {
-      if (err) {
-        throw 'could not open file: ' + err;
-      }
-      // write the contents of the buffer, from position 0 to the end, to the file descriptor returned in opening our file
-      fs.write(fd, buffer, 0, buffer.length, null, function (err) {
-        if (err) throw 'error writing file: ' + err;
-        fs.close(fd, function () {
-          console.log('wrote the file successfully');
-        });
-      });
-    });
-    await finalActions(args, id, data["links"]["html"]);
-  })
-}
-
-  */
+  //console.log(data)
   metadata = JSON.stringify(data["metadata"]);
-  console.log("\tMaking record editable.");
-  response_data = editDeposit(args, id);
-  console.log("\tUpdating record.");
-  metadata = updateMetadata(args, metadata);
-  response_data = updateRecord(args, id, metadata);
+  //console.log(metadata);
+
+
+  //console.log("\tMaking record editable.");
+  response_data = await editDeposit(args, id);
+
+  //console.log("\tUpdating metadata.");
+  metadata = await updateMetadata(args, metadata);
+
+  response_data = await updateRecord(args, id, metadata);
+  console.log(response_data);
+  //process.exit(1);
   bucket_url = response_data["links"]["bucket"];
   deposit_url = response_data["links"]["html"];
   if (args.files) {

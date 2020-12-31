@@ -229,9 +229,11 @@ function updateMetadata(args, metadata) {
     // Handle communities
     let communitiesArray = [];
     // Step 1. Get the original communities
-    console.log(JSON.stringify(metadata));
-    if ("communities" in metadata) {
-        const metadataCommunities = metadata["communities"];
+    console.log(metadata);
+    let dataIn = JSON.parse(metadata);
+    console.log(dataIn);
+    if (Object.keys(dataIn).indexOf("communities") !== -1) {
+        let metadataCommunities = dataIn["communities"];
         metadataCommunities.forEach(community => {
             communitiesArray.push(community["identifier"]);
         });
@@ -264,7 +266,7 @@ function updateMetadata(args, metadata) {
             communitiesArrayFinal.push({ "identifier": community });
         }
     });
-    metadata["communities"] = communitiesArrayFinal;
+    dataIn["communities"] = communitiesArrayFinal;
     // Done with communities
     if (("zotero_link" in args && args.zotero_link)) {
         metadata["related_identifiers"] = [{
