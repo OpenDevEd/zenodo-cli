@@ -42,6 +42,8 @@ async function apiCall(args,options, fullResponse=false) {
 async function publishDeposition(args, id) {
   id = parseId(id);
   const { zenodoAPIUrl, params } = loadConfig(args.config);
+
+
   const res = await axios.post(`${zenodoAPIUrl}/${id}/actions/publish`, { "params": params });
   if ((res.data !== 202)) {
     console.log(`Error in publshing deposition ${id}: `, res.data);
@@ -61,6 +63,21 @@ async function checkingConcept(args, id) {
   listParams["q"] = ("conceptrecid:" + id);
   let res = await axios.get(zenodoAPIUrl, { "params": listParams }); 
        return res.data[0];
+
+       /*
+
+            
+      console.log("Checking concept ID.");
+      const listParams = params;
+      listParams["q"] = ("conceptrecid:" + id);
+      let res = await axios.get(zenodoAPIUrl, { "params": listParams });
+      The id was a concept id, and located the record:
+      console.log(("Found record ID: " + res.data[0]["id"].toString()));
+
+
+
+       */
+
 }
 
 async function getData(args, id) {
@@ -81,22 +98,17 @@ async function getData(args, id) {
     } else{
 
       let res = await checkingConcept(args, id)
-      
-      //console.log("Checking concept ID.");
-     // const listParams = params;
-     // listParams["q"] = ("conceptrecid:" + id);
-     // let res = await axios.get(zenodoAPIUrl, { "params": listParams });
-        // The id was a concept id, and located the record:
-      //  console.log(("Found record ID: " + res.data[0]["id"].toString()));
         return res;
-
-        } 
-  } else{
+       } 
+  }
+   
+  else{
     return res.data
     }
+  
   });
 
-return resData;
+  return resData;
   
 }
   

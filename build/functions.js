@@ -70,6 +70,19 @@ async function checkingConcept(args, id) {
     listParams["q"] = ("conceptrecid:" + id);
     let res = await axios_1.default.get(zenodoAPIUrl, { "params": listParams });
     return res.data[0];
+    /*
+
+         
+   console.log("Checking concept ID.");
+   const listParams = params;
+   listParams["q"] = ("conceptrecid:" + id);
+   let res = await axios.get(zenodoAPIUrl, { "params": listParams });
+   The id was a concept id, and located the record:
+   console.log(("Found record ID: " + res.data[0]["id"].toString()));
+
+
+
+    */
 }
 async function getData(args, id) {
     const { zenodoAPIUrl, params } = helper_1.loadConfig(args.config);
@@ -87,12 +100,6 @@ async function getData(args, id) {
             }
             else {
                 let res = await checkingConcept(args, id);
-                //console.log("Checking concept ID.");
-                // const listParams = params;
-                // listParams["q"] = ("conceptrecid:" + id);
-                // let res = await axios.get(zenodoAPIUrl, { "params": listParams });
-                // The id was a concept id, and located the record:
-                //  console.log(("Found record ID: " + res.data[0]["id"].toString()));
                 return res;
             }
         }
