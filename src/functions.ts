@@ -16,6 +16,29 @@ import {
   updateMetadata
 } from "./helper";
 
+async function apiCall(args,options, fullResponse=false) {
+  const resData = await axios(options).then(res => {
+      if ("verbose" in args && args.verbose){
+          console.log(`response status code: ${res.status}`)
+          //zenodoMessage(res.status)
+      }
+    
+      if (fullResponse) {
+        return res;    
+       }
+       
+      else {
+        return res.data;
+      }
+    }).catch(err => {
+      //axiosError(err)
+      console.log(err);
+    });
+    
+    return resData
+
+  }
+
 async function publishDeposition(args, id) {
   id = parseId(id);
   const { zenodoAPIUrl, params } = loadConfig(args.config);
@@ -149,69 +172,38 @@ async function createRecord(args, metadata) {
     data: payload
   }
 
- const responseDataFromAPIcall = await apiCall(options);
-//
-async function apiCall(options, fullResponse=false) {
-  const resData = await axios(options).then(res => {
-      if ("verbose" in args && args.verbose){
-          console.log(`response status code: ${res.status}`)
-          zenodoMessage(res.status)
-      }
-    
-      if (fullResponse) {
-        return res;    
-       }
-       
-      else {
-        return res.data;
-      }
-    }).catch(err => {
-      axiosError(err)
-    });
-    
-    return resData
-
-  } // end apiCall function
-
-  return responseDataFromAPIcall;
+ const responseDataFromAPIcall = await apiCall(args,options);
+  
+     return responseDataFromAPIcall;
 
 }
-
-
-async function axiosError(error) {
-  if (error.response) {
-    console.log("The request was made and the server responded with a status code that falls out of the range of 2xx")
-    console.log(`ZENODO: Error in creating new record (other than 201)`);
-    console.log("ZENODO: List of error codes: https://developers.zenodo.org/?shell#http-status-codes");
-    console.log(error.response.status);
-    zenodoMessage(error.response.status);
-    console.log(error.response.data);
-    console.log(error.response.headers);
-  } else if (error.request) {
-    console.log(`The request was made but no response was received
-    'error.request' is an instance of XMLHttpRequest in the browser and an instance of
-    http.ClientRequest in node.js`);
-    console.log(error.request);
-  } else {
-    console.log("Something happened in setting up the request that triggered an Error")
-    console.log('Error', error.message);
-  }
-  console.log(error.config);
-  console.log(`Fatal error in create->axios.post: ${error}`);
-  process.exit(1);
-};
 
 
 async function editDeposit(args, dep_id) {
+
+  console.log("\tEditDeposit.");
   const { zenodoAPIUrl, params } = loadConfig(args.config);
-  const options = { headers: { 'Content-Type': "application/json" }, params: params }
-  const res = await axios.post(`${zenodoAPIUrl}/${parseId(dep_id)}/actions/edit`, options);
-  if ((res.status !== 201)) {
-    console.log(`Error in making record editable. ${res.data}`);
-    process.exit(1);
+  const options = { 
+    method: 'post', 
+    url: `${zenodoAPIUrl}/${parseId(dep_id)}`, 
+    params: params, 
+    headers: { 'Content-Type': "application/json" }
+ 
   }
-  return res.data;
+
+  const responseDataFromAPIcall = await apiCall(args,options);
+  return responseDataFromAPIcall;
+
+  //const res = await axios.post(`${zenodoAPIUrl}/${parseId(dep_id)}/actions/edit`, options);
+  //if ((res.status !== 201)) {
+    //console.log(`Error in making record editable. ${res.data}`);
+    //process.exit(1);
+  //}
+  //return res.data
+
 }
+
+
 
 async function updateRecord(args, dep_id, metadata) {
  
@@ -228,34 +220,13 @@ async function updateRecord(args, dep_id, metadata) {
     data: payload
   }
 
- const responseDataFromAPIcall = await apiCall(options);
+ const responseDataFromAPIcall = await apiCall(args,options);
 
- async function apiCall(options, fullResponse=false) {
-  const resData = await axios(options).then(res => {
-      if ("verbose" in args && args.verbose){
-          console.log(`response status code: ${res.status}`)
-          zenodoMessage(res.status)
-      }
-    
-      if (fullResponse) {
-        return res;    
-       }
-       
-      else {
-        return res.data;
-      }
-    }).catch(err => {
-      axiosError(err)
-    });
-    
-    return resData
-
-  } // end apiCall function
-
-  return responseDataFromAPIcall;
+   return responseDataFromAPIcall;
 
   
   /*
+  previous code:
   console.log("\tUpdating record.");
   const { zenodoAPIUrl, params } = loadConfig(args.config);
   const payload = { "metadata": metadata }
@@ -556,6 +527,32 @@ export async function create(args) {
   }
 }
 
+/*
+async function axiosError(error) {
+  if (error.response) {
+    console.log("The request was made and the server responded with a status code that falls out of the range of 2xx")
+    console.log(`ZENODO: Error in creating new record (other than 201)`);
+    console.log("ZENODO: List of error codes: https://developers.zenodo.org/?shell#http-status-codes");
+    console.log(error.response.status);
+    //zenodoMessage(error.response.status);
+    console.log(error.response.data);
+    console.log(error.response.headers);
+  } else if (error.request) {
+    console.log(`The request was made but no response was received
+    'error.request' is an instance of XMLHttpRequest in the browser and an instance of
+    http.ClientRequest in node.js`);
+    console.log(error.request);
+  } else {
+    console.log("Something happened in setting up the request that triggered an Error")
+    console.log('Error', error.message);
+  }
+  console.log(error.config);
+  console.log(`Fatal error in create->axios.post: ${error}`);
+  process.exit(1);
+};
+*/
+
+/*
 
 function zenodoMessage(number) {
   
@@ -587,6 +584,7 @@ function zenodoMessage(number) {
    console.log(`${number}: Internal Server Error	Request failed, due to an internal server error. Error response NOT included. Don’t worry, Zenodo admins have been notified and will be dealing with the problem ASAP.`);
   
 }
+*/
 
 
 

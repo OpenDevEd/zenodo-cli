@@ -31,6 +31,24 @@ const opn_1 = __importDefault(require("opn"));
 //for throw:
 //import { Observable, throwError } from 'rxjs';
 const helper_1 = require("./helper");
+async function apiCall(args, options, fullResponse = false) {
+    const resData = await axios_1.default(options).then(res => {
+        if ("verbose" in args && args.verbose) {
+            console.log(`response status code: ${res.status}`);
+            //zenodoMessage(res.status)
+        }
+        if (fullResponse) {
+            return res;
+        }
+        else {
+            return res.data;
+        }
+    }).catch(err => {
+        //axiosError(err)
+        console.log(err);
+    });
+    return resData;
+}
 async function publishDeposition(args, id) {
     id = helper_1.parseId(id);
     const { zenodoAPIUrl, params } = helper_1.loadConfig(args.config);
@@ -150,61 +168,26 @@ async function createRecord(args, metadata) {
         headers: { 'Content-Type': "application/json" },
         data: payload
     };
-    const responseDataFromAPIcall = await apiCall(options);
-    //
-    async function apiCall(options, fullResponse = false) {
-        const resData = await axios_1.default(options).then(res => {
-            if ("verbose" in args && args.verbose) {
-                console.log(`response status code: ${res.status}`);
-                zenodoMessage(res.status);
-            }
-            if (fullResponse) {
-                return res;
-            }
-            else {
-                return res.data;
-            }
-        }).catch(err => {
-            axiosError(err);
-        });
-        return resData;
-    } // end apiCall function
+    const responseDataFromAPIcall = await apiCall(args, options);
     return responseDataFromAPIcall;
 }
-async function axiosError(error) {
-    if (error.response) {
-        console.log("The request was made and the server responded with a status code that falls out of the range of 2xx");
-        console.log(`ZENODO: Error in creating new record (other than 201)`);
-        console.log("ZENODO: List of error codes: https://developers.zenodo.org/?shell#http-status-codes");
-        console.log(error.response.status);
-        zenodoMessage(error.response.status);
-        console.log(error.response.data);
-        console.log(error.response.headers);
-    }
-    else if (error.request) {
-        console.log(`The request was made but no response was received
-    'error.request' is an instance of XMLHttpRequest in the browser and an instance of
-    http.ClientRequest in node.js`);
-        console.log(error.request);
-    }
-    else {
-        console.log("Something happened in setting up the request that triggered an Error");
-        console.log('Error', error.message);
-    }
-    console.log(error.config);
-    console.log(`Fatal error in create->axios.post: ${error}`);
-    process.exit(1);
-}
-;
 async function editDeposit(args, dep_id) {
+    console.log("\tEditDeposit.");
     const { zenodoAPIUrl, params } = helper_1.loadConfig(args.config);
-    const options = { headers: { 'Content-Type': "application/json" }, params: params };
-    const res = await axios_1.default.post(`${zenodoAPIUrl}/${helper_1.parseId(dep_id)}/actions/edit`, options);
-    if ((res.status !== 201)) {
-        console.log(`Error in making record editable. ${res.data}`);
-        process.exit(1);
-    }
-    return res.data;
+    const options = {
+        method: 'post',
+        url: `${zenodoAPIUrl}/${helper_1.parseId(dep_id)}`,
+        params: params,
+        headers: { 'Content-Type': "application/json" }
+    };
+    const responseDataFromAPIcall = await apiCall(args, options);
+    return responseDataFromAPIcall;
+    //const res = await axios.post(`${zenodoAPIUrl}/${parseId(dep_id)}/actions/edit`, options);
+    //if ((res.status !== 201)) {
+    //console.log(`Error in making record editable. ${res.data}`);
+    //process.exit(1);
+    //}
+    //return res.data
 }
 async function updateRecord(args, dep_id, metadata) {
     console.log("\tUpdating record.");
@@ -218,26 +201,10 @@ async function updateRecord(args, dep_id, metadata) {
         headers: { 'Content-Type': "application/json" },
         data: payload
     };
-    const responseDataFromAPIcall = await apiCall(options);
-    async function apiCall(options, fullResponse = false) {
-        const resData = await axios_1.default(options).then(res => {
-            if ("verbose" in args && args.verbose) {
-                console.log(`response status code: ${res.status}`);
-                zenodoMessage(res.status);
-            }
-            if (fullResponse) {
-                return res;
-            }
-            else {
-                return res.data;
-            }
-        }).catch(err => {
-            axiosError(err);
-        });
-        return resData;
-    } // end apiCall function
+    const responseDataFromAPIcall = await apiCall(args, options);
     return responseDataFromAPIcall;
     /*
+    previous code:
     console.log("\tUpdating record.");
     const { zenodoAPIUrl, params } = loadConfig(args.config);
     const payload = { "metadata": metadata }
@@ -534,34 +501,63 @@ async function create(args) {
     }
 }
 exports.create = create;
+/*
+async function axiosError(error) {
+  if (error.response) {
+    console.log("The request was made and the server responded with a status code that falls out of the range of 2xx")
+    console.log(`ZENODO: Error in creating new record (other than 201)`);
+    console.log("ZENODO: List of error codes: https://developers.zenodo.org/?shell#http-status-codes");
+    console.log(error.response.status);
+    //zenodoMessage(error.response.status);
+    console.log(error.response.data);
+    console.log(error.response.headers);
+  } else if (error.request) {
+    console.log(`The request was made but no response was received
+    'error.request' is an instance of XMLHttpRequest in the browser and an instance of
+    http.ClientRequest in node.js`);
+    console.log(error.request);
+  } else {
+    console.log("Something happened in setting up the request that triggered an Error")
+    console.log('Error', error.message);
+  }
+  console.log(error.config);
+  console.log(`Fatal error in create->axios.post: ${error}`);
+  process.exit(1);
+};
+*/
+/*
+
 function zenodoMessage(number) {
-    if (number === 200)
-        console.log(`${number}: OK	Request succeeded. Response included. Usually sent for GET/PUT/PATCH requests`);
-    else if (number === 201)
-        console.log(`${number}: Created	Request succeeded. Response included. Usually sent for POST requests.`);
-    else if (number === 202)
-        console.log(`${number}: Accepted	Request succeeded. Response included. Usually sent for POST requests, where background processing is needed to fulfill the request.`);
-    else if (number === 204)
-        console.log(`${number}: No Content	Request succeeded. No response included. Usually sent for DELETE requests.`);
-    else if (number === 400)
-        console.log(`${number}: Bad Request	Request failed. Error response included.`);
-    else if (number === 401)
-        console.log(`${number}: Unauthorized	Request failed, due to an invalid access token. Error response included.`);
-    else if (number === 403)
-        console.log(`${number}: Forbidden	Request failed, due to missing authorization (e.g. deleting an already submitted upload or missing scopes for your access token). Error response included.`);
-    else if (number === 404)
-        console.log(`${number}: Not Found	Request failed, due to the resource not being found. Error response included.`);
-    else if (number === 405)
-        console.log(`${number}: Method Not Allowed	Request failed, due to unsupported HTTP method. Error response included.`);
-    else if (number === 409)
-        console.log(`${number}: Conflict	Request failed, due to the current state of the resource (e.g. edit a deopsition which is not fully integrated). Error response included.`);
-    else if (number === 415)
-        console.log(`${number}: Unsupported Media Type	Request failed, due to missing or invalid request header Content-Type. Error response included.`);
-    else if (number === 429)
-        console.log(`${number}: Too Many Requests	Request failed, due to rate limiting. Error response included.`);
-    else
-        console.log(`${number}: Internal Server Error	Request failed, due to an internal server error. Error response NOT included. Don’t worry, Zenodo admins have been notified and will be dealing with the problem ASAP.`);
+  
+   if(number === 200)
+   console.log(`${number}: OK	Request succeeded. Response included. Usually sent for GET/PUT/PATCH requests`);
+   else if(number === 201)
+   console.log(`${number}: Created	Request succeeded. Response included. Usually sent for POST requests.`);
+   else if(number === 202)
+   console.log(`${number}: Accepted	Request succeeded. Response included. Usually sent for POST requests, where background processing is needed to fulfill the request.`);
+   else if(number === 204)
+   console.log(`${number}: No Content	Request succeeded. No response included. Usually sent for DELETE requests.`);
+   else if(number === 400)
+   console.log(`${number}: Bad Request	Request failed. Error response included.`);
+   else if(number === 401)
+   console.log(`${number}: Unauthorized	Request failed, due to an invalid access token. Error response included.`);
+   else if(number === 403)
+   console.log(`${number}: Forbidden	Request failed, due to missing authorization (e.g. deleting an already submitted upload or missing scopes for your access token). Error response included.`);
+   else if(number === 404)
+   console.log(`${number}: Not Found	Request failed, due to the resource not being found. Error response included.`);
+   else if(number === 405)
+   console.log(`${number}: Method Not Allowed	Request failed, due to unsupported HTTP method. Error response included.`);
+   else if(number === 409)
+   console.log(`${number}: Conflict	Request failed, due to the current state of the resource (e.g. edit a deopsition which is not fully integrated). Error response included.`);
+   else if(number === 415)
+   console.log(`${number}: Unsupported Media Type	Request failed, due to missing or invalid request header Content-Type. Error response included.`);
+   else if(number === 429)
+   console.log(`${number}: Too Many Requests	Request failed, due to rate limiting. Error response included.`);
+   else
+   console.log(`${number}: Internal Server Error	Request failed, due to an internal server error. Error response NOT included. Don’t worry, Zenodo admins have been notified and will be dealing with the problem ASAP.`);
+  
 }
+*/
 /* OLD axios post code:
   const options = { headers: { 'Content-Type': "application/json" }, params: params }
   const resData = await axios.post(zenodoAPIUrl, JSON.stringify(payload), options)

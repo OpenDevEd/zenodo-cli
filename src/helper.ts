@@ -207,7 +207,7 @@ export function updateMetadata(args, metadata) {
   let communitiesArray = [];
   // Step 1. Get the original communities
   console.log(metadata)
-  let dataIn = JSON.parse(metadata);
+  let dataIn = {metadata};
   console.log(dataIn);
   if (Object.keys(dataIn).indexOf("communities") !== -1) {
     let metadataCommunities = dataIn["communities"];
