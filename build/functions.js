@@ -47,7 +47,7 @@ async function apiCall(args, options, fullResponse = false) {
         axiosError(err);
         console.log(err);
     });
-    return resData;
+    return resData.data;
 }
 async function publishDeposition(args, id) {
     id = helper_1.parseId(id);
@@ -171,14 +171,15 @@ async function createRecord(args, metadata) {
     const responseDataFromAPIcall = await apiCall(args, options);
     return responseDataFromAPIcall;
 }
-async function editDeposit(args, dep_id) {
+async function editDeposit(args, dep_id, payload) {
     console.log("\tEditDeposit.");
     const { zenodoAPIUrl, params } = helper_1.loadConfig(args.config);
     const options = {
         method: 'post',
-        url: `${zenodoAPIUrl}/${helper_1.parseId(dep_id)}`,
+        url: `${zenodoAPIUrl}/${helper_1.parseId(dep_id)}/actions/edit`,
         params: params,
-        headers: { 'Content-Type': "application/json" }
+        headers: { 'Content-Type': "application/json" },
+        data: payload
     };
     const responseDataFromAPIcall = await apiCall(args, options);
     return responseDataFromAPIcall;
@@ -326,16 +327,17 @@ exports.upload = upload;
 async function update(args) {
     let bucket_url, data, deposit_url, id;
     let metadata;
-    let response_data;
     id = helper_1.parseIds(args.id);
     data = await getData(args, id);
     //console.log(data)
     metadata = JSON.stringify(data["metadata"]);
     //console.log(metadata);
     //console.log("\tMaking record editable.");
-    response_data = await editDeposit(args, id);
+    let response = await editDeposit(args, id, metadata);
+    console.log(`response editDeposit:${response}`);
+    process.exit(1);
     //console.log("\tUpdating metadata.");
-    metadata = await helper_1.updateMetadata(args, metadata);
+    let metadataNew = await helper_1.updateMetadata(args, metadata);
     //CHECKING WHY:Here the metada get back with \\ 
     /*
      data: '{"metadata":"{\\"access_right\\":\\"open\\",\\"communities\\"
@@ -347,8 +349,8 @@ async function update(args) {
      ",\\"publication_type\\":\\"report\\",\\"title\\":\\"No title available.\\"
      ,\\"upload_type\\":\\"publication\\"}"}'
     */
-    response_data = await updateRecord(args, id, metadata);
-    console.log(response_data);
+    response = await updateRecord(args, id, metadataNew);
+    console.log(response);
     /*
   
       data: {
@@ -359,8 +361,8 @@ async function update(args) {
   
     */
     //process.exit(1);
-    bucket_url = response_data["links"]["bucket"];
-    deposit_url = response_data["links"]["html"];
+    bucket_url = response["links"]["bucket"];
+    deposit_url = response["links"]["html"];
     if (args.files) {
         args.files.forEach(async function (filePath) {
             await fileUpload(args, bucket_url, filePath);

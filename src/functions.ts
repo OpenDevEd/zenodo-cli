@@ -35,7 +35,7 @@ async function apiCall(args,options, fullResponse=false) {
       console.log(err);
     });
     
-    return resData
+    return resData.data;
 
   }
 
@@ -179,16 +179,16 @@ async function createRecord(args, metadata) {
 }
 
 
-async function editDeposit(args, dep_id) {
+async function editDeposit(args, dep_id,payload) {
 
   console.log("\tEditDeposit.");
   const { zenodoAPIUrl, params } = loadConfig(args.config);
   const options = { 
     method: 'post', 
-    url: `${zenodoAPIUrl}/${parseId(dep_id)}`, 
+    url: `${zenodoAPIUrl}/${parseId(dep_id)}/actions/edit`, 
     params: params, 
-    headers: { 'Content-Type': "application/json" }
- 
+    headers: { 'Content-Type': "application/json" },
+    data: payload
   }
 
   const responseDataFromAPIcall = await apiCall(args,options);
@@ -348,7 +348,7 @@ export async function upload(args) {
 export async function update(args) {
   let bucket_url, data, deposit_url, id;
   let metadata;
-  let response_data;
+
   id = parseIds(args.id);
   data = await getData(args, id);
   //console.log(data)
@@ -358,10 +358,11 @@ export async function update(args) {
   
 
   //console.log("\tMaking record editable.");
-  response_data = await editDeposit(args, id);
-
+  let response = await editDeposit(args, id,metadata);
+   console.log(`response editDeposit:${response}`);
+   process.exit(1);
   //console.log("\tUpdating metadata.");
-   metadata = await updateMetadata(args, metadata);
+  let metadataNew = await updateMetadata(args, metadata);
 
      //CHECKING WHY:Here the metada get back with \\ 
   /*
@@ -375,8 +376,8 @@ export async function update(args) {
    ,\\"upload_type\\":\\"publication\\"}"}'
   */
 
-  response_data = await updateRecord(args, id, metadata);
-  console.log(response_data);
+  response = await updateRecord(args, id, metadataNew);
+  console.log(response);
   /*
 
     data: {
@@ -387,8 +388,8 @@ export async function update(args) {
 
   */
   //process.exit(1);
-  bucket_url = response_data["links"]["bucket"];
-  deposit_url = response_data["links"]["html"];
+  bucket_url = response["links"]["bucket"];
+  deposit_url = response["links"]["html"];
   if (args.files) {
     args.files.forEach(async function (filePath) {
       await fileUpload(args, bucket_url, filePath);

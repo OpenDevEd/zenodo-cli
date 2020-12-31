@@ -208,7 +208,7 @@ export function updateMetadata(args, metadata) {
   // Step 1. Get the original communities
   console.log(metadata)
   let dataIn = {metadata};
-  console.log(dataIn);
+  console.log(`DataIn: ${dataIn}`);
   if (Object.keys(dataIn).indexOf("communities") !== -1) {
     let metadataCommunities = dataIn["communities"];
       metadataCommunities.forEach(community => {
