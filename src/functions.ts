@@ -17,20 +17,19 @@ import {
 } from "./helper";
 
 async function apiCall(args, options, fullResponse = false) {
+ 
+  console.log(`API CALL`)
   const resData = await axios(options).then(res => {
     if ("verbose" in args && args.verbose) {
       console.log(`response status code: ${res.status}`)
       zenodoMessage(res.status)
     }
-
     if (fullResponse) {
       return res;
-    }
-
-    else {
+    } else {
       return res.data;
     }
-  }).catch(err => {
+  }).catch( function (err) {
     axiosError(err)
     console.log(err);
   });
@@ -38,6 +37,31 @@ async function apiCall(args, options, fullResponse = false) {
   return resData;
 
 }
+
+//TODO:
+/*
+async function apiCallGet(args, options, fullResponse = false) {
+ 
+  console.log(`API CALL GET`)
+  const resData = await axios(options).then(res => {
+    if ("verbose" in args && args.verbose) {
+      console.log(`response status code: ${res.status}`)
+      zenodoMessage(res.status)
+    }
+    if (fullResponse) {
+      return res;
+    } else {
+      return res.data;
+    }
+  }).catch( function (err) {
+    axiosError(err)
+    console.log(err);
+  });
+
+  return resData;
+
+}
+*/
 
 async function publishDeposition(args, id) {
   id = parseId(id);
@@ -49,7 +73,7 @@ async function publishDeposition(args, id) {
     method: 'post',
     url: `${zenodoAPIUrl}/${id}/actions/publish`,
     params: params,
-    headers: { 'Content-Type': "application/json" },  
+    headers: { 'Content-Type': "application/json" },
   }
   const responseDataFromAPIcall = await apiCall(args, options);
   return responseDataFromAPIcall;
@@ -60,13 +84,15 @@ async function showDeposition(args, id) {
   showDepositionJSON(info);
 }
 
+/*
 async function checkingConcept(args, id) {
   const { zenodoAPIUrl, params } = loadConfig(args.config);
   const listParams = params;
   listParams["q"] = ("conceptrecid:" + id);
   let res = await axios.get(zenodoAPIUrl, { "params": listParams });
   return res.data[0];
-
+}
+  */
   /*
 
        
@@ -79,47 +105,50 @@ async function checkingConcept(args, id) {
 
   */
 
-}
+
 
 async function getData(args, id) {
   const { zenodoAPIUrl, params } = loadConfig(args.config);
-  console.log(`getting data`);
+  console.log(`getting data for ${id}`);
   id = parseId(id);
   console.log(id);
   console.log(`${zenodoAPIUrl}/${id}`);
-  /* //TODO: 
-  const options = {
+  let options = {
     method: 'get',
-    url: `${zenodoAPIUrl}/${id}`,
+    url: `${zenodoAPIUrl}`,
     params: params,
     headers: { 'Content-Type': "application/json" },  
   }
-  const responseDataFromAPIcall = await apiCall(args, options);
+  options["params"]["q"] = String("conceptrecid:" + id + " OR recid:" + id);
+  const searchParams = {params};
+  searchParams["q"] = String("conceptrecid:" + id + " OR recid:" + id);
+  console.log(options)
+  try {
+    console.log(`start ${zenodoAPIUrl}/${id}`)
+    const responseDataFromAPIcall = await axios.get(`${zenodoAPIUrl}`, searchParams )
+    //const responseDataFromAPIcall = await apiCallGet(args, options)
+    console.log(`done`)
+    // If the id was a conceptid, we need to let the calling function know.
+    // Called id=077 
+    // Function returns data anyway.
+    // Calling function assumes that id=077 is a valid id.
+      // TODO
+  // Check whether data.metadata.id == id
+  /*
+  if (data.metadata.id != id) {
+    console.log("WARNING: concept id provided (077). Record ID is 078. Operate on 078? Y/N")
+    if (yes) {
+      id = data.metadata.id
+    }
+  }
+  // Instead of this we could say 
+    console.log("WARNING: concept id provided (077). Record ID is 078. In order to use concept ids, please add the following switch: --allowconceptids ")
   */
-  let resData = await axios.get(`${zenodoAPIUrl}/${id}`, { "params": params })
-    .then(async res => {
-
-      console.log(res.status);
-      if ((res.status !== 200)) {
-
-        if ((res.status["status"] !== 404)) {
-          console.log(`Error in getting data: ${res.data}`);
-          process.exit(1);
-        } else {
-
-          let res = await checkingConcept(args, id)
-          return res;
-        }
-      }
-
-      else {
-        return res.data
-      }
-
-    });
-
-  return resData;
-
+    return responseDataFromAPIcall.data[0]
+  } catch (error) {
+    console.log("ERROR getData/responseDataFromAPIcall: "+error)
+    process.exit(1)
+  }
 }
 
 /*
@@ -151,9 +180,6 @@ else{
   return res.data
 }
 */
-
-
-
 
 async function getMetadata(args, id) {
   return await getData(args, id)["metadata"];
@@ -236,17 +262,14 @@ async function editDeposit(args, dep_id) {
 
 }
 
-
-
 async function updateRecord(args, dep_id, metadata) {
 
-  console.log("\tUpdating record.");
-//-->
-  const { params, zenodoAPIUrl }  = loadConfig(args.config);
+  console.log("Updating record.");
+  //-->
+  const { params, zenodoAPIUrl } = loadConfig(args.config);
   const payload = { "metadata": metadata }
-  console.log(JSON.stringify(params))
-  console.log(JSON.stringify(zenodoAPIUrl))
-  process.exit(1)
+  //console.log(JSON.stringify(params))
+  //console.log(JSON.stringify(zenodoAPIUrl))
   const options = {
     method: 'put',
     url: `${zenodoAPIUrl}/${parseId(dep_id)}`,
@@ -307,13 +330,18 @@ async function finalActions(args, id, deposit_url) {
   }
 }
 
-export async function saveIdsToJson(args) {
+export async function getRecord(args) {
   let data, ids;
   ids = parseIds(args.id);
   ids.forEach(async function (id) {
+    console.log(`saveIdsToJson ---0`)
     data = await getData(args, id);
+    console.log(JSON.stringify(data))
+    console.log(`saveIdsToJson ---1a`)
     let path = `${id}.json`;
+    console.log(`saveIdsToJson ---1b`)
     let buffer = Buffer.from(JSON.stringify(data["metadata"]));
+    console.log(`saveIdsToJson ---2`)
     fs.open(path, 'w', function (err, fd) {
       if (err) {
         throw 'could not open file: ' + err;
@@ -329,7 +357,9 @@ export async function saveIdsToJson(args) {
         });
       });
     });
+    console.log(`saveIdsToJson ---3`)
     await finalActions(args, id, data["links"]["html"]);
+    console.log(`saveIdsToJson ---4`)
   })
 }
 
@@ -397,8 +427,6 @@ export async function update(args) {
   //process.exit(1);
   //console.log("\tUpdating metadata.");
   let metadataNew = await updateMetadata(args, metadata);
-
-
   let response2 = await updateRecord(args, id, metadataNew);
   console.log(response2);
   /*

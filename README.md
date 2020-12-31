@@ -103,3 +103,19 @@ Three states
 - state: 'unsubmitted'/submitted: false,
 - state: 'done'/submitted: true,
 - state: 'inprogress'/submitted: true,
+
+
+  
+  Zenodo has the notion of records and concepts. Both of them have <ID>s, e.g. 1341000=concept, 1341001=record, 1341002=record, 1341003=concept, 1341004=record.
+  
+  The only thing that is certain is that a concept <ID> is always followed by a record <ID>.
+  
+  The problem is that "?q=conceptrecid:<ID>" gives an error for <ID>s that are records, while ?q=recid:<ID>" gives an error for <ID>s that are concepts.
+  
+  At the moment 'get' uses "?q=recid:<ID>", i.e., we get an error for <ID>s that are concepts. However, the user doesn't know whether <ID> is a record or a concept...
+  
+  To work around this, we need to make our query as follows:
+  "?q=conceptrecid:<ID> OR recid:<ID>".
+  
+  This will always return some json. The user then needs to work out whether it's a concept or a record.
+  

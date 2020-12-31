@@ -75,7 +75,7 @@ parser_get.add_argument("--dump", {
     "help": "Show json for deposition after executing the command.",
     "default": false
 });
-parser_get.set_defaults({ "func": functions_1.saveIdsToJson });
+parser_get.set_defaults({ "func": functions_1.getRecord });
 const parser_create = subparsers.add_parser("create", { "help": "The create command creates new records based on the json files provided, optionally providing a title / date / description / files." });
 parser_create.add_argument("--json", {
     "action": "store",

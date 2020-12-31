@@ -22,7 +22,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.create = exports.concept = exports.download = exports.newVersion = exports.listDepositions = exports.copy = exports.update = exports.upload = exports.duplicate = exports.dumpDeposition = exports.saveIdsToJson = void 0;
+exports.create = exports.concept = exports.download = exports.newVersion = exports.listDepositions = exports.copy = exports.update = exports.upload = exports.duplicate = exports.dumpDeposition = exports.getRecord = void 0;
 const axios_1 = __importDefault(require("axios"));
 const fs = __importStar(require("fs"));
 const opn_1 = __importDefault(require("opn"));
@@ -32,6 +32,7 @@ const opn_1 = __importDefault(require("opn"));
 //import { Observable, throwError } from 'rxjs';
 const helper_1 = require("./helper");
 async function apiCall(args, options, fullResponse = false) {
+    console.log(`API CALL`);
     const resData = await axios_1.default(options).then(res => {
         if ("verbose" in args && args.verbose) {
             console.log(`response status code: ${res.status}`);
@@ -43,12 +44,36 @@ async function apiCall(args, options, fullResponse = false) {
         else {
             return res.data;
         }
-    }).catch(err => {
+    }).catch(function (err) {
         axiosError(err);
         console.log(err);
     });
     return resData;
 }
+//TODO:
+/*
+async function apiCallGet(args, options, fullResponse = false) {
+ 
+  console.log(`API CALL GET`)
+  const resData = await axios(options).then(res => {
+    if ("verbose" in args && args.verbose) {
+      console.log(`response status code: ${res.status}`)
+      zenodoMessage(res.status)
+    }
+    if (fullResponse) {
+      return res;
+    } else {
+      return res.data;
+    }
+  }).catch( function (err) {
+    axiosError(err)
+    console.log(err);
+  });
+
+  return resData;
+
+}
+*/
 async function publishDeposition(args, id) {
     id = helper_1.parseId(id);
     const { zenodoAPIUrl, params } = helper_1.loadConfig(args.config);
@@ -68,57 +93,53 @@ async function showDeposition(args, id) {
     const info = await getData(args, helper_1.parseId(id));
     helper_1.showDepositionJSON(info);
 }
+/*
 async function checkingConcept(args, id) {
-    const { zenodoAPIUrl, params } = helper_1.loadConfig(args.config);
-    const listParams = params;
-    listParams["q"] = ("conceptrecid:" + id);
-    let res = await axios_1.default.get(zenodoAPIUrl, { "params": listParams });
-    return res.data[0];
-    /*
-  
-         
-   console.log("Checking concept ID.");
-   const listParams = params;
-   listParams["q"] = ("conceptrecid:" + id);
-   let res = await axios.get(zenodoAPIUrl, { "params": listParams });
-   The id was a concept id, and located the record:
-   console.log(("Found record ID: " + res.data[0]["id"].toString()));
-  
-    */
+  const { zenodoAPIUrl, params } = loadConfig(args.config);
+  const listParams = params;
+  listParams["q"] = ("conceptrecid:" + id);
+  let res = await axios.get(zenodoAPIUrl, { "params": listParams });
+  return res.data[0];
 }
+  */
+/*
+
+     
+console.log("Checking concept ID.");
+const listParams = params;
+listParams["q"] = ("conceptrecid:" + id);
+let res = await axios.get(zenodoAPIUrl, { "params": listParams });
+The id was a concept id, and located the record:
+console.log(("Found record ID: " + res.data[0]["id"].toString()));
+
+*/
 async function getData(args, id) {
     const { zenodoAPIUrl, params } = helper_1.loadConfig(args.config);
-    console.log(`getting data`);
+    console.log(`getting data for ${id}`);
     id = helper_1.parseId(id);
     console.log(id);
     console.log(`${zenodoAPIUrl}/${id}`);
-    /* //TODO:
-    const options = {
-      method: 'get',
-      url: `${zenodoAPIUrl}/${id}`,
-      params: params,
-      headers: { 'Content-Type': "application/json" },
+    let options = {
+        method: 'get',
+        url: `${zenodoAPIUrl}`,
+        params: params,
+        headers: { 'Content-Type': "application/json" },
+    };
+    options["params"]["q"] = String("conceptrecid:" + id + " OR recid:" + id);
+    const searchParams = { params };
+    searchParams["q"] = String("conceptrecid:" + id + " OR recid:" + id);
+    console.log(options);
+    try {
+        console.log(`start ${zenodoAPIUrl}/${id}`);
+        const responseDataFromAPIcall = await axios_1.default.get(`${zenodoAPIUrl}`, searchParams);
+        //const responseDataFromAPIcall = await apiCallGet(args, options)
+        console.log(`done`);
+        return responseDataFromAPIcall.data[0];
     }
-    const responseDataFromAPIcall = await apiCall(args, options);
-    */
-    let resData = await axios_1.default.get(`${zenodoAPIUrl}/${id}`, { "params": params })
-        .then(async (res) => {
-        console.log(res.status);
-        if ((res.status !== 200)) {
-            if ((res.status["status"] !== 404)) {
-                console.log(`Error in getting data: ${res.data}`);
-                process.exit(1);
-            }
-            else {
-                let res = await checkingConcept(args, id);
-                return res;
-            }
-        }
-        else {
-            return res.data;
-        }
-    });
-    return resData;
+    catch (error) {
+        console.log("ERROR getData/responseDataFromAPIcall: " + error);
+        process.exit(1);
+    }
 }
 /*
 if ((res.status !== 200)) {
@@ -222,13 +243,12 @@ async function editDeposit(args, dep_id) {
     //return res.data
 }
 async function updateRecord(args, dep_id, metadata) {
-    console.log("\tUpdating record.");
+    console.log("Updating record.");
     //-->
     const { params, zenodoAPIUrl } = helper_1.loadConfig(args.config);
     const payload = { "metadata": metadata };
-    console.log(JSON.stringify(params));
-    console.log(JSON.stringify(zenodoAPIUrl));
-    process.exit(1);
+    //console.log(JSON.stringify(params))
+    //console.log(JSON.stringify(zenodoAPIUrl))
     const options = {
         method: 'put',
         url: `${zenodoAPIUrl}/${helper_1.parseId(dep_id)}`,
@@ -282,13 +302,18 @@ async function finalActions(args, id, deposit_url) {
         opn_1.default(deposit_url);
     }
 }
-async function saveIdsToJson(args) {
+async function getRecord(args) {
     let data, ids;
     ids = helper_1.parseIds(args.id);
     ids.forEach(async function (id) {
+        console.log(`saveIdsToJson ---0`);
         data = await getData(args, id);
+        console.log(JSON.stringify(data));
+        console.log(`saveIdsToJson ---1a`);
         let path = `${id}.json`;
+        console.log(`saveIdsToJson ---1b`);
         let buffer = Buffer.from(JSON.stringify(data["metadata"]));
+        console.log(`saveIdsToJson ---2`);
         fs.open(path, 'w', function (err, fd) {
             if (err) {
                 throw 'could not open file: ' + err;
@@ -305,10 +330,12 @@ async function saveIdsToJson(args) {
                 });
             });
         });
+        console.log(`saveIdsToJson ---3`);
         await finalActions(args, id, data["links"]["html"]);
+        console.log(`saveIdsToJson ---4`);
     });
 }
-exports.saveIdsToJson = saveIdsToJson;
+exports.getRecord = getRecord;
 async function dumpDeposition(args, id) {
     const info = await getData(args, helper_1.parseId(id));
     helper_1.dumpJSON(info);
