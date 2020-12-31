@@ -20,7 +20,7 @@ async function apiCall(args,options, fullResponse=false) {
   const resData = await axios(options).then(res => {
       if ("verbose" in args && args.verbose){
           console.log(`response status code: ${res.status}`)
-          //zenodoMessage(res.status)
+          zenodoMessage(res.status)
       }
     
       if (fullResponse) {
@@ -31,7 +31,7 @@ async function apiCall(args,options, fullResponse=false) {
         return res.data;
       }
     }).catch(err => {
-      //axiosError(err)
+      axiosError(err)
       console.log(err);
     });
     
@@ -549,7 +549,7 @@ export async function create(args) {
   }
 }
 
-/*
+
 async function axiosError(error) {
   if (error.response) {
     console.log("The request was made and the server responded with a status code that falls out of the range of 2xx")
@@ -572,9 +572,7 @@ async function axiosError(error) {
   console.log(`Fatal error in create->axios.post: ${error}`);
   process.exit(1);
 };
-*/
 
-/*
 
 function zenodoMessage(number) {
   
@@ -606,7 +604,7 @@ function zenodoMessage(number) {
    console.log(`${number}: Internal Server Error	Request failed, due to an internal server error. Error response NOT included. Don’t worry, Zenodo admins have been notified and will be dealing with the problem ASAP.`);
   
 }
-*/
+
 
 
 
