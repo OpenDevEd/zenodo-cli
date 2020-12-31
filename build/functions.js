@@ -336,6 +336,17 @@ async function update(args) {
     response_data = await editDeposit(args, id);
     //console.log("\tUpdating metadata.");
     metadata = await helper_1.updateMetadata(args, metadata);
+    //CHECKING WHY:Here the metada get back with \\ 
+    /*
+     data: '{"metadata":"{\\"access_right\\":\\"open\\",\\"communities\\"
+     :[{\\"identifier\\":\\"zenodo\\"}],\\"creators\\":[{\\"affiliation\\"
+     :\\"No affiliation available.\\",\\"name\\":\\"No name available.\\"}]
+     ,\\"description\\":\\"No description available.\\",\\"doi\\":\\"\\",\\
+     "license\\":\\"CC-BY-4.0\\",\\"prereserve_doi\\":{\\"doi\\":\\"10.5072/
+     zenodo.712078\\",\\"recid\\":712078},\\"publication_date\\":\\"2020-12-31\\
+     ",\\"publication_type\\":\\"report\\",\\"title\\":\\"No title available.\\"
+     ,\\"upload_type\\":\\"publication\\"}"}'
+    */
     response_data = await updateRecord(args, id, metadata);
     console.log(response_data);
     //process.exit(1);

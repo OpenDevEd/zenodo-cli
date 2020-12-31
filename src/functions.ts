@@ -355,13 +355,15 @@ export async function update(args) {
   metadata = JSON.stringify(data["metadata"]);
   //console.log(metadata);
 
+  
 
   //console.log("\tMaking record editable.");
   response_data = await editDeposit(args, id);
 
   //console.log("\tUpdating metadata.");
    metadata = await updateMetadata(args, metadata);
-  //CHECKING WHY:Here the metada get back with \\ 
+
+     //CHECKING WHY:Here the metada get back with \\ 
   /*
    data: '{"metadata":"{\\"access_right\\":\\"open\\",\\"communities\\"
    :[{\\"identifier\\":\\"zenodo\\"}],\\"creators\\":[{\\"affiliation\\"
@@ -372,8 +374,18 @@ export async function update(args) {
    ",\\"publication_type\\":\\"report\\",\\"title\\":\\"No title available.\\"
    ,\\"upload_type\\":\\"publication\\"}"}'
   */
+
   response_data = await updateRecord(args, id, metadata);
   console.log(response_data);
+  /*
+
+    data: {
+      error_id: '476de0f6b4d84386a2f8e029bd54754a',
+      message: 'Internal Server Error',
+      status: 500
+    }
+
+  */
   //process.exit(1);
   bucket_url = response_data["links"]["bucket"];
   deposit_url = response_data["links"]["html"];
