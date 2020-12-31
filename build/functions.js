@@ -527,7 +527,7 @@ async function axiosError(error) {
         console.log(`ZENODO: Error in creating new record (other than 201)`);
         console.log("ZENODO: List of error codes: https://developers.zenodo.org/?shell#http-status-codes");
         console.log(error.response.status);
-        //zenodoMessage(error.response.status);
+        zenodoMessage(error.response.status);
         console.log(error.response.data);
         console.log(error.response.headers);
     }
