@@ -78,7 +78,7 @@ async function getData(args, id) {
     console.log(id);
     console.log(`${zenodoAPIUrl}/${id}`);
     let resData = await axios_1.default.get(`${zenodoAPIUrl}/${id}`, { "params": params })
-        .then(res => {
+        .then(async (res) => {
         console.log(res.status);
         if ((res.status !== 200)) {
             if ((res.status["status"] !== 404)) {
@@ -86,7 +86,7 @@ async function getData(args, id) {
                 process.exit(1);
             }
             else {
-                let res = checkingConcept(args, id);
+                let res = await checkingConcept(args, id);
                 //console.log("Checking concept ID.");
                 // const listParams = params;
                 // listParams["q"] = ("conceptrecid:" + id);

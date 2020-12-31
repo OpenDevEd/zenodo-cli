@@ -70,7 +70,7 @@ async function getData(args, id) {
   console.log(id);
   console.log(`${zenodoAPIUrl}/${id}`);
   let resData = await axios.get(`${zenodoAPIUrl}/${id}`, { "params": params })
-  .then(res=>{
+  .then(async res=>{
 
   console.log(res.status);
   if ((res.status !== 200)) {
@@ -80,7 +80,7 @@ async function getData(args, id) {
       process.exit(1);
     } else{
 
-      let res = checkingConcept(args, id)
+      let res = await checkingConcept(args, id)
       
       //console.log("Checking concept ID.");
      // const listParams = params;
@@ -90,7 +90,7 @@ async function getData(args, id) {
       //  console.log(("Found record ID: " + res.data[0]["id"].toString()));
         return res;
 
-    } 
+        } 
   } else{
     return res.data
     }
@@ -360,8 +360,18 @@ export async function update(args) {
   response_data = await editDeposit(args, id);
 
   //console.log("\tUpdating metadata.");
-  metadata = await updateMetadata(args, metadata);
-
+   metadata = await updateMetadata(args, metadata);
+  //CHECKING WHY:Here the metada get back with \\ 
+  /*
+   data: '{"metadata":"{\\"access_right\\":\\"open\\",\\"communities\\"
+   :[{\\"identifier\\":\\"zenodo\\"}],\\"creators\\":[{\\"affiliation\\"
+   :\\"No affiliation available.\\",\\"name\\":\\"No name available.\\"}]
+   ,\\"description\\":\\"No description available.\\",\\"doi\\":\\"\\",\\
+   "license\\":\\"CC-BY-4.0\\",\\"prereserve_doi\\":{\\"doi\\":\\"10.5072/
+   zenodo.712078\\",\\"recid\\":712078},\\"publication_date\\":\\"2020-12-31\\
+   ",\\"publication_type\\":\\"report\\",\\"title\\":\\"No title available.\\"
+   ,\\"upload_type\\":\\"publication\\"}"}'
+  */
   response_data = await updateRecord(args, id, metadata);
   console.log(response_data);
   //process.exit(1);
