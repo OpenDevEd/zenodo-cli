@@ -193,6 +193,9 @@ export function updateMetadata(args, metadata) {
     metadata["creators"] = creatorsNew
   }
 
+  //console.log(`Step 1. ${metadata}`);
+  //console.log(typeof metadata)
+
   if ("title" in args && args.title) {
     metadata["title"] = args.title;
   }
@@ -203,16 +206,15 @@ export function updateMetadata(args, metadata) {
     metadata["description"] = args.description;
   }
 
-  // Handle communities
+  // Handle communities. Communities identifiers are added to the communitiesArray.
   let communitiesArray = [];
   // Step 1. Get the original communities
-  console.log(metadata)
-  let dataIn = {metadata};
-  console.log(`DataIn: ${dataIn}`);
-  if (Object.keys(dataIn).indexOf("communities") !== -1) {
-    let metadataCommunities = dataIn["communities"];
-      metadataCommunities.forEach(community => {
-      communitiesArray.push(community["identifier"]);
+  //let dataIn = {metadata};
+  //console.log(`DataIn: ${dataIn}`);
+  if (Object.keys(metadata).indexOf("communities") !== -1) {
+    let metadataCommunities = metadata["communities"];
+      metadataCommunities.forEach(thisCommunity => {
+      communitiesArray.push(thisCommunity["identifier"]);
     })
   }
   // Step 2. Add communities specified with --add-communities
@@ -243,7 +245,7 @@ export function updateMetadata(args, metadata) {
       communitiesArrayFinal.push({ "identifier": community });
     }
   })
-  dataIn["communities"] = communitiesArrayFinal;
+  metadata["communities"] = communitiesArrayFinal;
   // Done with communities
 
   if (("zotero_link" in args && args.zotero_link)) {
