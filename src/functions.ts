@@ -17,7 +17,7 @@ import {
 } from "./helper";
 
 async function apiCall(args, options, fullResponse = false) {
- 
+
   console.log(`API CALL`)
   const resData = await axios(options).then(res => {
     if ("verbose" in args && args.verbose) {
@@ -29,9 +29,37 @@ async function apiCall(args, options, fullResponse = false) {
     } else {
       return res.data;
     }
-  }).catch( function (err) {
+  }).catch(function (err) {
+    if ("verbose" in args && args.verbose) {
+      console.log(err);
+    }
     axiosError(err)
-    console.log(err);
+  });
+
+  return resData;
+
+}
+
+async function apiCallPut(args, options, fullResponse = false) {
+ const payload = { "data": options.data }
+ const destination = options.url
+ const axiosoptions = { headers: { 'Content-Type': "application/octet-stream" },  params: options.params }
+  console.log(`API CALL`)
+  const resData = await axios.put(destination, payload , axiosoptions ).then(res => {
+    if ("verbose" in args && args.verbose) {
+      console.log(`response status code: ${res.status}`)
+      zenodoMessage(res.status)
+    }
+    if (fullResponse) {
+      return res;
+    } else {
+      return res.data;
+    }
+  }).catch(function (err) {
+    if ("verbose" in args && args.verbose) {
+      console.log(err);
+    }
+    axiosError(err)
   });
 
   return resData;
@@ -93,17 +121,17 @@ async function checkingConcept(args, id) {
   return res.data[0];
 }
   */
-  /*
+/*
 
-       
- console.log("Checking concept ID.");
- const listParams = params;
- listParams["q"] = ("conceptrecid:" + id);
- let res = await axios.get(zenodoAPIUrl, { "params": listParams });
- The id was a concept id, and located the record:
- console.log(("Found record ID: " + res.data[0]["id"].toString()));
+     
+console.log("Checking concept ID.");
+const listParams = params;
+listParams["q"] = ("conceptrecid:" + id);
+let res = await axios.get(zenodoAPIUrl, { "params": listParams });
+The id was a concept id, and located the record:
+console.log(("Found record ID: " + res.data[0]["id"].toString()));
 
-  */
+*/
 
 
 
@@ -117,36 +145,36 @@ async function getData(args, id) {
     method: 'get',
     url: `${zenodoAPIUrl}`,
     params: params,
-    headers: { 'Content-Type': "application/json" },  
+    headers: { 'Content-Type': "application/json" },
   }
   options["params"]["q"] = String("conceptrecid:" + id + " OR recid:" + id);
-  const searchParams = {params};
+  const searchParams = { params };
   searchParams["q"] = String("conceptrecid:" + id + " OR recid:" + id);
   console.log(options)
   try {
     console.log(`start ${zenodoAPIUrl}/${id}`)
-    const responseDataFromAPIcall = await axios.get(`${zenodoAPIUrl}`, searchParams )
+    const responseDataFromAPIcall = await axios.get(`${zenodoAPIUrl}`, searchParams)
     //const responseDataFromAPIcall = await apiCallGet(args, options)
     console.log(`done`)
     // If the id was a conceptid, we need to let the calling function know.
     // Called id=077 
     // Function returns data anyway.
     // Calling function assumes that id=077 is a valid id.
-      // TODO
-  // Check whether data.metadata.id == id
-  /*
-  if (data.metadata.id != id) {
-    console.log("WARNING: concept id provided (077). Record ID is 078. Operate on 078? Y/N")
-    if (yes) {
-      id = data.metadata.id
+    // TODO
+    // Check whether data.metadata.id == id
+    /*
+    if (data.metadata.id != id) {
+      console.log("WARNING: concept id provided (077). Record ID is 078. Operate on 078? Y/N")
+      if (yes) {
+        id = data.metadata.id
+      }
     }
-  }
-  // Instead of this we could say 
-    console.log("WARNING: concept id provided (077). Record ID is 078. In order to use concept ids, please add the following switch: --allowconceptids ")
-  */
+    // Instead of this we could say 
+      console.log("WARNING: concept id provided (077). Record ID is 078. In order to use concept ids, please add the following switch: --allowconceptids ")
+    */
     return responseDataFromAPIcall.data[0]
   } catch (error) {
-    console.log("ERROR getData/responseDataFromAPIcall: "+error)
+    console.log("ERROR getData/responseDataFromAPIcall: " + error)
     process.exit(1)
   }
 }
@@ -298,17 +326,46 @@ async function updateRecord(args, dep_id, metadata) {
    return response;
    */
 }
+/*
 
+*/
 async function fileUpload(args, bucket_url, journal_filepath) {
   const { params } = loadConfig(args.config);
-  console.log("\tUploading file.");
-  const replaced = journal_filepath.replace("^.*\\/", "");
-  const data = fs.readFileSync(journal_filepath, "utf8");
-  const res = await axios.put(((bucket_url + "/") + replaced), { "data": data, "params": params });
-  if ((res.status !== 200)) {
-    process.exit(res.data);
-  }
-  console.log("\tUpload successful.");
+  console.log("Uploading file.");
+  const fileName = journal_filepath.replace("^.*\\/", "");
+  console.log(`----------> ${journal_filepath}`)
+  const data = fs.readFileSync(journal_filepath, 'binary');
+  console.log(data)
+  //TODO: write file data into Buffer and use it as payloud.
+  //const payload = { data }
+  // TODO
+  //let buf = Buffer.from(data);
+  const destination = `${bucket_url}/${fileName}`
+  const options = {
+    method: 'put',
+    url: destination,
+    params: params,
+    header: { 'Content-Type': "application/octet-stream" },
+    data: data
+    
+   }
+  // console.log(options)
+  //     header: { 'Content-Type': "application/octet-stream" },
+
+ //  const responseDataFromAPIcall = await apiCall(args, options);
+ //const payload = { "data": data }
+ // const options = { headers: { 'Content-Type': "application/octet-stream" },  params: params }
+ // const responseDataFromAPIcall = await axios.put(destination, payload , options );
+ const responseDataFromAPIcall = await apiCallPut( args,options );
+
+ //const payload = { "metadata": metadata }
+ //const options = { headers: { 'Content-Type': "application/json" }, params: params }
+ //console.log(`${zenodoAPIUrl}/${parseId(dep_id)}`);
+ //let response = await axios.put(`${zenodoAPIUrl}/${parseId(dep_id)}`, payload, options)
+
+  console.log("Upload???.");  
+  console.log(`${destination}`)
+  return responseDataFromAPIcall
 }
 
 async function finalActions(args, id, deposit_url) {
@@ -428,7 +485,7 @@ export async function update(args) {
   //console.log("\tUpdating metadata.");
   let metadataNew = await updateMetadata(args, metadata);
   let response2 = await updateRecord(args, id, metadataNew);
-  console.log(response2);
+  //console.log(response2);
   /*
 
     data: {
@@ -446,6 +503,8 @@ export async function update(args) {
       await fileUpload(args, bucket_url, filePath);
     })
   }
+  // TO DO
+  // Wait for promises to complete before calling final actions:
   await finalActions(args, id, deposit_url);
 }
 
@@ -468,6 +527,22 @@ export async function listDepositions(args) {
   const { zenodoAPIUrl, params } = loadConfig(args.config);
   params["page"] = args.page;
   params["size"] = (args.size ? args.size : 1000);
+
+  /*
+  const optipns = {
+    method:'get',
+
+  }
+  // GET request for remote image in node.js
+axios({
+  method: 'get',
+  url: 'http://bit.ly/2mTM3nY',
+  responseType: 'stream'
+  })
+  .then(function (response) {
+    response.data.pipe(fs.createWriteStream('ada_lovelace.jpg'))
+  });
+*/
   const res = await axios.get(zenodoAPIUrl, { params });
   if ((res.status !== 200)) {
     console.log(`Failed in listDepositions: ${res.data}`);
@@ -504,9 +579,10 @@ export async function newVersion(args) {
 
   const options = {
     method: 'post',
-    url:`${zenodoAPIUrl}/${id}/actions/newversion`,
+    url: `${zenodoAPIUrl}/${id}/actions/newversion`,
     params: params,
     headers: { 'Content-Type': "application/json" },
+
   }
 
   const responseDataFromAPIcall = await apiCall(args, options);
@@ -534,71 +610,71 @@ export async function download(args) {
   id = parseId(args.id[0]);
   data = await getData(args, id);
   const { params } = loadConfig(args.config);
-    //IF NO uploaded files: data["files"] => undefined.
-    if(data["files"]){ //the record should be [published] to have this option.
+  //IF NO uploaded files: data["files"] => undefined.
+  if (data["files"]) { //the record should be [published] to have this option.
     data["files"].forEach(async function (fileObj) {
-    name = fileObj["filename"];
-    console.log(`Downloading ${name}`);
-    const res = await axios.get(fileObj["links"]["download"], { "params": params });
-    
-    fs.open(name, 'wx+',(err,fd) => {
-      
-      if (err){
-       console.log(err);
-      }else {
-        //uniquely referencing a specific file.
-        console.log(fd);
-        let buf = Buffer.from(res.data),
-        pos = 0,offset = 0,
-        len = buf.length 
-        fs.write(fd, buf, offset, len, pos,
-        (err,bytes,buff) => {
-          let buf2 = Buffer.alloc(len);
-          //testing
-          fs.read(fd,buf2,offset, len, pos,
-          (err,bytes,buff2) => {
-           console.log(buff2.toString());
-          });
-          //testing
-        });
-      }
-    
-  });
+      name = fileObj["filename"];
+      console.log(`Downloading ${name}`);
+      const res = await axios.get(fileObj["links"]["download"], { "params": params });
 
-  //----------checksum
+      fs.open(name, 'wx+', (err, fd) => {
 
+        if (err) {
+          console.log(err);
+        } else {
+          //uniquely referencing a specific file.
+          console.log(fd);
+          let buf = Buffer.from(res.data),
+            pos = 0, offset = 0,
+            len = buf.length
+          fs.write(fd, buf, offset, len, pos,
+            (err, bytes, buff) => {
+              let buf2 = Buffer.alloc(len);
+              //testing
+              fs.read(fd, buf2, offset, len, pos,
+                (err, bytes, buff2) => {
+                  console.log(buff2.toString());
+                });
+              //testing
+            });
+        }
 
-  fs.open(name + ".md5", 'w+',(err,fd) => {
-      
-    if (err){
-     console.log(err);
-    }else {
-      //uniquely referencing a specific file.
-      console.log(fd);
-      let buf = Buffer.from((fileObj["checksum"] + " ") + fileObj["filename"]),
-      pos = 0,offset = 0,
-      len = buf.length 
-      fs.write(fd, buf, offset, len, pos,
-      (err,bytes,buff) => {
-        let buf2 = Buffer.alloc(len);
-        //testing
-        fs.read(fd,buf2,offset, len, pos,
-        (err,bytes,buff2) => {
-         console.log(buff2.toString());
-        });
-       //testing
       });
-    }  
- });
- 
-});
 
-  
-} else{
+      //----------checksum
 
-  console.log("the record should be published and files uploaded")
-   
- }
+
+      fs.open(name + ".md5", 'w+', (err, fd) => {
+
+        if (err) {
+          console.log(err);
+        } else {
+          //uniquely referencing a specific file.
+          console.log(fd);
+          let buf = Buffer.from((fileObj["checksum"] + " ") + fileObj["filename"]),
+            pos = 0, offset = 0,
+            len = buf.length
+          fs.write(fd, buf, offset, len, pos,
+            (err, bytes, buff) => {
+              let buf2 = Buffer.alloc(len);
+              //testing
+              fs.read(fd, buf2, offset, len, pos,
+                (err, bytes, buff2) => {
+                  console.log(buff2.toString());
+                });
+              //testing
+            });
+        }
+      });
+
+    });
+
+
+  } else {
+
+    console.log("the record should be published and files uploaded")
+
+  }
 
   /*
   OLD code:
@@ -686,12 +762,18 @@ export async function create(args) {
 async function axiosError(error) {
   if (error.response) {
     console.log("The request was made and the server responded with a status code that falls out of the range of 2xx")
-    console.log(`ZENODO: Error in creating new record (other than 201)`);
+    console.log(`ZENODO: Error in creating new record (other than 2xx)`);
     console.log("ZENODO: List of error codes: https://developers.zenodo.org/?shell#http-status-codes");
-    console.log(error.response.status);
+    console.log("status:" + error.response.status);
     zenodoMessage(error.response.status);
-    console.log(error.response.data);
-    console.log(error.response.headers);
+    console.log('Error1', error.message);
+    console.log('Error2', JSON.stringify(error.response.errors));
+    console.log('Error3', error.response.data.status);
+    console.log('Error4', error.response.data.message);
+    // if (verbose) {
+    //  console.log(error.response.data);
+    //  console.log(error.response.headers);
+    // }
   } else if (error.request) {
     console.log(`The request was made but no response was received
     'error.request' is an instance of XMLHttpRequest in the browser and an instance of
@@ -764,3 +846,10 @@ function zenodoMessage(number) {
   }
   */
 
+/*
+The functions should be migrated in the following priority:
+P1: list - done, get - done, show - done, dump - done, create - done, update - done, upload, publish
+P2: new version, download -tb tested, concept - done, open
+P3: duplicate, multi-duplicate
+
+*/

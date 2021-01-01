@@ -45,8 +45,34 @@ async function apiCall(args, options, fullResponse = false) {
             return res.data;
         }
     }).catch(function (err) {
+        if ("verbose" in args && args.verbose) {
+            console.log(err);
+        }
         axiosError(err);
-        console.log(err);
+    });
+    return resData;
+}
+async function apiCallPut(args, options, fullResponse = false) {
+    const payload = { "data": options.data };
+    const destination = options.url;
+    const axiosoptions = { headers: { 'Content-Type': "application/octet-stream" }, params: options.params };
+    console.log(`API CALL`);
+    const resData = await axios_1.default.put(destination, payload, axiosoptions).then(res => {
+        if ("verbose" in args && args.verbose) {
+            console.log(`response status code: ${res.status}`);
+            zenodoMessage(res.status);
+        }
+        if (fullResponse) {
+            return res;
+        }
+        else {
+            return res.data;
+        }
+    }).catch(function (err) {
+        if ("verbose" in args && args.verbose) {
+            console.log(err);
+        }
+        axiosError(err);
     });
     return resData;
 }
@@ -289,16 +315,42 @@ async function updateRecord(args, dep_id, metadata) {
      return response;
      */
 }
+/*
+
+*/
 async function fileUpload(args, bucket_url, journal_filepath) {
     const { params } = helper_1.loadConfig(args.config);
-    console.log("\tUploading file.");
-    const replaced = journal_filepath.replace("^.*\\/", "");
-    const data = fs.readFileSync(journal_filepath, "utf8");
-    const res = await axios_1.default.put(((bucket_url + "/") + replaced), { "data": data, "params": params });
-    if ((res.status !== 200)) {
-        process.exit(res.data);
-    }
-    console.log("\tUpload successful.");
+    console.log("Uploading file.");
+    const fileName = journal_filepath.replace("^.*\\/", "");
+    console.log(`----------> ${journal_filepath}`);
+    const data = fs.readFileSync(journal_filepath, 'binary');
+    console.log(data);
+    //TODO: write file data into Buffer and use it as payloud.
+    //const payload = { data }
+    // TODO
+    //let buf = Buffer.from(data);
+    const destination = `${bucket_url}/${fileName}`;
+    const options = {
+        method: 'put',
+        url: destination,
+        params: params,
+        header: { 'Content-Type': "application/octet-stream" },
+        data: data
+    };
+    // console.log(options)
+    //     header: { 'Content-Type': "application/octet-stream" },
+    //  const responseDataFromAPIcall = await apiCall(args, options);
+    //const payload = { "data": data }
+    // const options = { headers: { 'Content-Type': "application/octet-stream" },  params: params }
+    // const responseDataFromAPIcall = await axios.put(destination, payload , options );
+    const responseDataFromAPIcall = await apiCallPut(args, options);
+    //const payload = { "metadata": metadata }
+    //const options = { headers: { 'Content-Type': "application/json" }, params: params }
+    //console.log(`${zenodoAPIUrl}/${parseId(dep_id)}`);
+    //let response = await axios.put(`${zenodoAPIUrl}/${parseId(dep_id)}`, payload, options)
+    console.log("Upload???.");
+    console.log(`${destination}`);
+    return responseDataFromAPIcall;
 }
 async function finalActions(args, id, deposit_url) {
     // if (verbose) {
@@ -418,7 +470,7 @@ async function update(args) {
     //console.log("\tUpdating metadata.");
     let metadataNew = await helper_1.updateMetadata(args, metadata);
     let response2 = await updateRecord(args, id, metadataNew);
-    console.log(response2);
+    //console.log(response2);
     /*
   
       data: {
@@ -458,6 +510,21 @@ async function listDepositions(args) {
     const { zenodoAPIUrl, params } = helper_1.loadConfig(args.config);
     params["page"] = args.page;
     params["size"] = (args.size ? args.size : 1000);
+    /*
+    const optipns = {
+      method:'get',
+  
+    }
+    // GET request for remote image in node.js
+  axios({
+    method: 'get',
+    url: 'http://bit.ly/2mTM3nY',
+    responseType: 'stream'
+    })
+    .then(function (response) {
+      response.data.pipe(fs.createWriteStream('ada_lovelace.jpg'))
+    });
+  */
     const res = await axios_1.default.get(zenodoAPIUrl, { params });
     if ((res.status !== 200)) {
         console.log(`Failed in listDepositions: ${res.data}`);
@@ -522,8 +589,7 @@ async function download(args) {
     data = await getData(args, id);
     const { params } = helper_1.loadConfig(args.config);
     //IF NO uploaded files: data["files"] => undefined.
-    //console.log(data["files"]);
-    if (data["files"]) {
+    if (data["files"]) { //the record should be [published] to have this option.
         data["files"].forEach(async function (fileObj) {
             name = fileObj["filename"];
             console.log(`Downloading ${name}`);
@@ -538,9 +604,11 @@ async function download(args) {
                     let buf = Buffer.from(res.data), pos = 0, offset = 0, len = buf.length;
                     fs.write(fd, buf, offset, len, pos, (err, bytes, buff) => {
                         let buf2 = Buffer.alloc(len);
+                        //testing
                         fs.read(fd, buf2, offset, len, pos, (err, bytes, buff2) => {
                             console.log(buff2.toString());
                         });
+                        //testing
                     });
                 }
             });
@@ -555,16 +623,18 @@ async function download(args) {
                     let buf = Buffer.from((fileObj["checksum"] + " ") + fileObj["filename"]), pos = 0, offset = 0, len = buf.length;
                     fs.write(fd, buf, offset, len, pos, (err, bytes, buff) => {
                         let buf2 = Buffer.alloc(len);
+                        //testing
                         fs.read(fd, buf2, offset, len, pos, (err, bytes, buff2) => {
                             console.log(buff2.toString());
                         });
+                        //testing
                     });
                 }
             });
         });
     }
     else {
-        console.log("No files uploaded");
+        console.log("the record should be published and files uploaded");
     }
     /*
     OLD code:
@@ -650,12 +720,18 @@ exports.create = create;
 async function axiosError(error) {
     if (error.response) {
         console.log("The request was made and the server responded with a status code that falls out of the range of 2xx");
-        console.log(`ZENODO: Error in creating new record (other than 201)`);
+        console.log(`ZENODO: Error in creating new record (other than 2xx)`);
         console.log("ZENODO: List of error codes: https://developers.zenodo.org/?shell#http-status-codes");
-        console.log(error.response.status);
+        console.log("status:" + error.response.status);
         zenodoMessage(error.response.status);
-        console.log(error.response.data);
-        console.log(error.response.headers);
+        console.log('Error1', error.message);
+        console.log('Error2', JSON.stringify(error.response.errors));
+        console.log('Error3', error.response.data.status);
+        console.log('Error4', error.response.data.message);
+        // if (verbose) {
+        //  console.log(error.response.data);
+        //  console.log(error.response.headers);
+        // }
     }
     else if (error.request) {
         console.log(`The request was made but no response was received
@@ -722,4 +798,11 @@ function zenodoMessage(number) {
     console.log(zenodoMessage(res.status))
   }
   */
+/*
+The functions should be migrated in the following priority:
+P1: list - done, get - done, show - done, dump - done, create - done, update - done, upload, publish
+P2: new version, download -tb tested, concept - done, open
+P3: duplicate, multi-duplicate
+
+*/
 //# sourceMappingURL=functions.js.map

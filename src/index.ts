@@ -19,6 +19,11 @@ parser.add_argument("--config", {
   "default": "config.json",
   "help": "Config file with API key. By default config.json then ~/.config/zenodo-cli/config.json are used if no config is provided."
 });
+parser.add_argument("--verbose", {
+  "action": "store_true",
+  "help": "Show response status after calling the API",
+  "default": false
+});
 
 const subparsers = parser.add_subparsers({ "help": "sub-command help" });
 const parser_list = subparsers.add_parser("list", { "help": "List deposits for this account. Note that the Zenodo API does not seem to send continuation tokens. The first 1000 results are retrieved. Please use --page to retrieve more. The result is the record id, followed by the helper id." });
@@ -132,12 +137,6 @@ parser_create.add_argument("--show", {
 parser_create.add_argument("--dump", {
   "action": "store_true",
   "help": "Show json for deposition after executing the command.",
-  "default": false
-});
-
-parser_create.add_argument("--verbose", {
-  "action": "store_true",
-  "help": "Show response status after calling the API",
   "default": false
 });
 
