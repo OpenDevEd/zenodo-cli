@@ -535,8 +535,7 @@ export async function download(args) {
   data = await getData(args, id);
   const { params } = loadConfig(args.config);
     //IF NO uploaded files: data["files"] => undefined.
-    //console.log(data["files"]);
-   
+    if(data["files"]){ //the record should be [published] to have this option.
     data["files"].forEach(async function (fileObj) {
     name = fileObj["filename"];
     console.log(`Downloading ${name}`);
@@ -555,12 +554,12 @@ export async function download(args) {
         fs.write(fd, buf, offset, len, pos,
         (err,bytes,buff) => {
           let buf2 = Buffer.alloc(len);
+          //testing
           fs.read(fd,buf2,offset, len, pos,
           (err,bytes,buff2) => {
            console.log(buff2.toString());
-          
           });
- 
+          //testing
         });
       }
     
@@ -582,19 +581,24 @@ export async function download(args) {
       fs.write(fd, buf, offset, len, pos,
       (err,bytes,buff) => {
         let buf2 = Buffer.alloc(len);
+        //testing
         fs.read(fd,buf2,offset, len, pos,
         (err,bytes,buff2) => {
          console.log(buff2.toString());
-        
         });
+       //testing
       });
-    }
-  
+    }  
+ });
+ 
 });
 
+  
+} else{
 
-          
-  });
+  console.log("the record should be published and files uploaded")
+   
+ }
 
   /*
   OLD code:

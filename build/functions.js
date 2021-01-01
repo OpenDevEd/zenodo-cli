@@ -523,44 +523,49 @@ async function download(args) {
     const { params } = helper_1.loadConfig(args.config);
     //IF NO uploaded files: data["files"] => undefined.
     //console.log(data["files"]);
-    data["files"].forEach(async function (fileObj) {
-        name = fileObj["filename"];
-        console.log(`Downloading ${name}`);
-        const res = await axios_1.default.get(fileObj["links"]["download"], { "params": params });
-        fs.open(name, 'wx+', (err, fd) => {
-            if (err) {
-                console.log(err);
-            }
-            else {
-                //uniquely referencing a specific file.
-                console.log(fd);
-                let buf = Buffer.from(res.data), pos = 0, offset = 0, len = buf.length;
-                fs.write(fd, buf, offset, len, pos, (err, bytes, buff) => {
-                    let buf2 = Buffer.alloc(len);
-                    fs.read(fd, buf2, offset, len, pos, (err, bytes, buff2) => {
-                        console.log(buff2.toString());
+    if (data["files"]) {
+        data["files"].forEach(async function (fileObj) {
+            name = fileObj["filename"];
+            console.log(`Downloading ${name}`);
+            const res = await axios_1.default.get(fileObj["links"]["download"], { "params": params });
+            fs.open(name, 'wx+', (err, fd) => {
+                if (err) {
+                    console.log(err);
+                }
+                else {
+                    //uniquely referencing a specific file.
+                    console.log(fd);
+                    let buf = Buffer.from(res.data), pos = 0, offset = 0, len = buf.length;
+                    fs.write(fd, buf, offset, len, pos, (err, bytes, buff) => {
+                        let buf2 = Buffer.alloc(len);
+                        fs.read(fd, buf2, offset, len, pos, (err, bytes, buff2) => {
+                            console.log(buff2.toString());
+                        });
                     });
-                });
-            }
-        });
-        //----------checksum
-        fs.open(name + ".md5", 'w+', (err, fd) => {
-            if (err) {
-                console.log(err);
-            }
-            else {
-                //uniquely referencing a specific file.
-                console.log(fd);
-                let buf = Buffer.from((fileObj["checksum"] + " ") + fileObj["filename"]), pos = 0, offset = 0, len = buf.length;
-                fs.write(fd, buf, offset, len, pos, (err, bytes, buff) => {
-                    let buf2 = Buffer.alloc(len);
-                    fs.read(fd, buf2, offset, len, pos, (err, bytes, buff2) => {
-                        console.log(buff2.toString());
+                }
+            });
+            //----------checksum
+            fs.open(name + ".md5", 'w+', (err, fd) => {
+                if (err) {
+                    console.log(err);
+                }
+                else {
+                    //uniquely referencing a specific file.
+                    console.log(fd);
+                    let buf = Buffer.from((fileObj["checksum"] + " ") + fileObj["filename"]), pos = 0, offset = 0, len = buf.length;
+                    fs.write(fd, buf, offset, len, pos, (err, bytes, buff) => {
+                        let buf2 = Buffer.alloc(len);
+                        fs.read(fd, buf2, offset, len, pos, (err, bytes, buff2) => {
+                            console.log(buff2.toString());
+                        });
                     });
-                });
-            }
+                }
+            });
         });
-    });
+    }
+    else {
+        console.log("No files uploaded");
+    }
     /*
     OLD code:
   
