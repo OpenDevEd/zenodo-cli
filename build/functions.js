@@ -134,6 +134,22 @@ async function getData(args, id) {
         const responseDataFromAPIcall = await axios_1.default.get(`${zenodoAPIUrl}`, searchParams);
         //const responseDataFromAPIcall = await apiCallGet(args, options)
         console.log(`done`);
+        // If the id was a conceptid, we need to let the calling function know.
+        // Called id=077 
+        // Function returns data anyway.
+        // Calling function assumes that id=077 is a valid id.
+        // TODO
+        // Check whether data.metadata.id == id
+        /*
+        if (data.metadata.id != id) {
+          console.log("WARNING: concept id provided (077). Record ID is 078. Operate on 078? Y/N")
+          if (yes) {
+            id = data.metadata.id
+          }
+        }
+        // Instead of this we could say
+          console.log("WARNING: concept id provided (077). Record ID is 078. In order to use concept ids, please add the following switch: --allowconceptids ")
+        */
         return responseDataFromAPIcall.data[0];
     }
     catch (error) {
@@ -474,12 +490,16 @@ exports.listDepositions = listDepositions;
 async function newVersion(args) {
     const { zenodoAPIUrl, params } = helper_1.loadConfig(args.config);
     const id = helper_1.parseId(args.id[0]);
-    const response = await axios_1.default.post(`${zenodoAPIUrl}/${id}/actions/newversion`, { "params": params });
-    if ((response.status !== 201)) {
-        console.log(`New version request failed:`, response.data);
-        process.exit(1);
-    }
-    let response_data = response.data;
+    // TODO:DONE
+    const options = {
+        method: 'post',
+        url: `${zenodoAPIUrl}/${id}/actions/newversion`,
+        params: params,
+        headers: { 'Content-Type': "application/json" },
+    };
+    const responseDataFromAPIcall = await apiCall(args, options);
+    //return responseDataFromAPIcall;
+    let response_data = responseDataFromAPIcall.data;
     const metadata = await getMetadata(args, id);
     const newmetadata = helper_1.updateMetadata(args, metadata);
     if ((newmetadata !== metadata)) {
@@ -497,21 +517,68 @@ async function newVersion(args) {
 }
 exports.newVersion = newVersion;
 async function download(args) {
-    var data, fp, id, name;
+    var data, id, name;
     id = helper_1.parseId(args.id[0]);
     data = await getData(args, id);
     const { params } = helper_1.loadConfig(args.config);
+    //IF NO uploaded files: data["files"] => undefined.
+    //console.log(data["files"]);
     data["files"].forEach(async function (fileObj) {
         name = fileObj["filename"];
         console.log(`Downloading ${name}`);
         const res = await axios_1.default.get(fileObj["links"]["download"], { "params": params });
-        fp = open(name, "wb+");
-        fp.write(res.data);
-        fp.close();
-        fp = open((name + ".md5"), "w+");
-        fp.write(((fileObj["checksum"] + " ") + fileObj["filename"]));
-        fp.close();
+        fs.open(name, 'wx+', (err, fd) => {
+            if (err) {
+                console.log(err);
+            }
+            else {
+                //uniquely referencing a specific file.
+                console.log(fd);
+                let buf = Buffer.from(res.data), pos = 0, offset = 0, len = buf.length;
+                fs.write(fd, buf, offset, len, pos, (err, bytes, buff) => {
+                    let buf2 = Buffer.alloc(len);
+                    fs.read(fd, buf2, offset, len, pos, (err, bytes, buff2) => {
+                        console.log(buff2.toString());
+                    });
+                });
+            }
+        });
+        //----------checksum
+        fs.open(name + ".md5", 'w+', (err, fd) => {
+            if (err) {
+                console.log(err);
+            }
+            else {
+                //uniquely referencing a specific file.
+                console.log(fd);
+                let buf = Buffer.from((fileObj["checksum"] + " ") + fileObj["filename"]), pos = 0, offset = 0, len = buf.length;
+                fs.write(fd, buf, offset, len, pos, (err, bytes, buff) => {
+                    let buf2 = Buffer.alloc(len);
+                    fs.read(fd, buf2, offset, len, pos, (err, bytes, buff2) => {
+                        console.log(buff2.toString());
+                    });
+                });
+            }
+        });
     });
+    /*
+    OLD code:
+  
+      data["files"].forEach(async function (fileObj) {
+      name = fileObj["filename"];
+      console.log(`Downloading ${name}`);
+      const res = await axios.get(fileObj["links"]["download"], { "params": params });
+      fp = open(name, "wb+");
+      fp.write(res.data);
+      fp.close();
+      fp = open((name + ".md5"), "w+");
+      fp.write(((fileObj["checksum"] + " ") + fileObj["filename"]));
+      fp.close();
+    })
+  
+  
+  
+    */
 }
 exports.download = download;
 async function concept(args) {
