@@ -52,7 +52,8 @@ async function apiCall(args, options, fullResponse = false) {
     });
     return resData;
 }
-async function apiCallPut(args, options, fullResponse = false) {
+//Note: This is API call for [File upload] because the [header] is different in this case.
+async function apiCallFileUpload(args, options, fullResponse = false) {
     const payload = { "data": options.data };
     const destination = options.url;
     const axiosoptions = { headers: { 'Content-Type': "application/octet-stream" }, params: options.params };
@@ -119,26 +120,6 @@ async function showDeposition(args, id) {
     const info = await getData(args, helper_1.parseId(id));
     helper_1.showDepositionJSON(info);
 }
-/*
-async function checkingConcept(args, id) {
-  const { zenodoAPIUrl, params } = loadConfig(args.config);
-  const listParams = params;
-  listParams["q"] = ("conceptrecid:" + id);
-  let res = await axios.get(zenodoAPIUrl, { "params": listParams });
-  return res.data[0];
-}
-  */
-/*
-
-     
-console.log("Checking concept ID.");
-const listParams = params;
-listParams["q"] = ("conceptrecid:" + id);
-let res = await axios.get(zenodoAPIUrl, { "params": listParams });
-The id was a concept id, and located the record:
-console.log(("Found record ID: " + res.data[0]["id"].toString()));
-
-*/
 async function getData(args, id) {
     const { zenodoAPIUrl, params } = helper_1.loadConfig(args.config);
     console.log(`getting data for ${id}`);
@@ -151,10 +132,11 @@ async function getData(args, id) {
         params: params,
         headers: { 'Content-Type': "application/json" },
     };
+    //Checking Concept. 
     options["params"]["q"] = String("conceptrecid:" + id + " OR recid:" + id);
     const searchParams = { params };
     searchParams["q"] = String("conceptrecid:" + id + " OR recid:" + id);
-    console.log(options);
+    //console.log(options)
     try {
         console.log(`start ${zenodoAPIUrl}/${id}`);
         const responseDataFromAPIcall = await axios_1.default.get(`${zenodoAPIUrl}`, searchParams);
@@ -183,35 +165,6 @@ async function getData(args, id) {
         process.exit(1);
     }
 }
-/*
-if ((res.status !== 200)) {
-  if ((res.status["status"] !== 404)) {
-    console.log(`Error in getting data: ${res.data}`);
-    process.exit(1);
-  }
-  else if (res.status === 404) {
-    // Getting record id faied, check whether the id is a concept id.
-    /*
-    1000 <-- concept id
-    1001 <-- record
-    5325 <-- new record id (concept id of 1000)
-    getData(5325) -> record data for 5325
-    getData(1000) -> record id = 5325 -> record data for 5325
-    
-    console.log("Checking concept ID.");
-    const listParams = params;
-    listParams["q"] = ("conceptrecid:" + id);
-    res = await axios.get(zenodoAPIUrl, { "params": listParams });
-      // The id was a concept id, and located the record:
-      console.log(("Found record ID: " + res.data[0]["id"].toString()));
-      return res.data[0];
-  }
-     
-}
-else{
-  return res.data
-}
-*/
 async function getMetadata(args, id) {
     return await getData(args, id)["metadata"];
 }
@@ -277,20 +230,12 @@ async function editDeposit(args, dep_id) {
     };
     const responseDataFromAPIcall = await apiCall(args, options, false);
     return responseDataFromAPIcall;
-    //const res = await axios.post(`${zenodoAPIUrl}/${parseId(dep_id)}/actions/edit`, options);
-    //if ((res.status !== 201)) {
-    //console.log(`Error in making record editable. ${res.data}`);
-    //process.exit(1);
-    //}
-    //return res.data
 }
 async function updateRecord(args, dep_id, metadata) {
     console.log("Updating record.");
     //-->
     const { params, zenodoAPIUrl } = helper_1.loadConfig(args.config);
     const payload = { "metadata": metadata };
-    //console.log(JSON.stringify(params))
-    //console.log(JSON.stringify(zenodoAPIUrl))
     const options = {
         method: 'put',
         url: `${zenodoAPIUrl}/${helper_1.parseId(dep_id)}`,
@@ -324,11 +269,7 @@ async function fileUpload(args, bucket_url, journal_filepath) {
     const fileName = journal_filepath.replace("^.*\\/", "");
     console.log(`----------> ${journal_filepath}`);
     const data = fs.readFileSync(journal_filepath, 'binary');
-    console.log(data);
-    //TODO: write file data into Buffer and use it as payloud.
-    //const payload = { data }
-    // TODO
-    //let buf = Buffer.from(data);
+    //console.log(data)
     const destination = `${bucket_url}/${fileName}`;
     const options = {
         method: 'put',
@@ -337,18 +278,8 @@ async function fileUpload(args, bucket_url, journal_filepath) {
         header: { 'Content-Type': "application/octet-stream" },
         data: data
     };
-    // console.log(options)
-    //     header: { 'Content-Type': "application/octet-stream" },
-    //  const responseDataFromAPIcall = await apiCall(args, options);
-    //const payload = { "data": data }
-    // const options = { headers: { 'Content-Type': "application/octet-stream" },  params: params }
-    // const responseDataFromAPIcall = await axios.put(destination, payload , options );
-    const responseDataFromAPIcall = await apiCallPut(args, options);
-    //const payload = { "metadata": metadata }
-    //const options = { headers: { 'Content-Type': "application/json" }, params: params }
-    //console.log(`${zenodoAPIUrl}/${parseId(dep_id)}`);
-    //let response = await axios.put(`${zenodoAPIUrl}/${parseId(dep_id)}`, payload, options)
-    console.log("Upload???.");
+    const responseDataFromAPIcall = await apiCallFileUpload(args, options);
+    console.log("UploadSuccessfully.");
     console.log(`${destination}`);
     return responseDataFromAPIcall;
 }
@@ -466,26 +397,17 @@ async function update(args) {
         let response = await editDeposit(args, id);
         console.log(`response editDeposit:${response}`);
     }
-    //process.exit(1);
-    //console.log("\tUpdating metadata.");
     let metadataNew = await helper_1.updateMetadata(args, metadata);
-    let response2 = await updateRecord(args, id, metadataNew);
-    //console.log(response2);
-    /*
-  
-      data: {
-        error_id: '476de0f6b4d84386a2f8e029bd54754a',
-        message: 'Internal Server Error',
-        status: 500
-      }
-  
-    */
-    //process.exit(1);
-    bucket_url = response2["links"]["bucket"];
-    deposit_url = response2["links"]["html"];
+    let responseUpdateRecord = await updateRecord(args, id, metadataNew);
+    bucket_url = responseUpdateRecord["links"]["bucket"];
+    deposit_url = responseUpdateRecord["links"]["html"];
     if (args.files) {
         args.files.forEach(async function (filePath) {
-            await fileUpload(args, bucket_url, filePath);
+            await fileUpload(args, bucket_url, filePath).then(async () => {
+                // TO DO
+                // Wait for promises to complete before calling final actions:
+                await finalActions(args, id, deposit_url);
+            });
         });
     }
     await finalActions(args, id, deposit_url);
@@ -577,10 +499,11 @@ async function newVersion(args) {
     if (args.files) {
         args.files.forEach(async function (filePath) {
             await fileUpload(args, bucket_url, filePath);
+        }).then(async () => {
+            await finalActions(args, response_data["id"], deposit_url);
+            console.log("latest_draft: ", response_data["links"]["latest_draft"]);
         });
     }
-    await finalActions(args, response_data["id"], deposit_url);
-    console.log("latest_draft: ", response_data["links"]["latest_draft"]);
 }
 exports.newVersion = newVersion;
 async function download(args) {
@@ -800,9 +723,9 @@ function zenodoMessage(number) {
   */
 /*
 The functions should be migrated in the following priority:
-P1: list - done, get - done, show - done, dump - done, create - done, update - done, upload, publish
-P2: new version, download -tb tested, concept - done, open
-P3: duplicate, multi-duplicate
+P1: list - done, get - done, show - done, dump - done, create - done, update - done, upload-done, publish(no)
+P2: new version(no), download -tested by Zeina, concept - done, open-done
+P3: duplicate-(no), multi-duplicate-(no)
 
 */
 //# sourceMappingURL=functions.js.map
