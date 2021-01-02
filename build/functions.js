@@ -341,20 +341,25 @@ async function dumpDeposition(args, id) {
 }
 exports.dumpDeposition = dumpDeposition;
 async function duplicate(args) {
-    var bucket_url, deposit_url, metadata, response_data;
-    metadata = getMetadata(args, args.id[0]);
-    console.log(JSON.stringify(metadata));
+    let bucket_url, deposit_url, metadata, response_data;
+    let data = await getData(args, args.id[0]);
+    //getMetadata(args,args.id[0]);
+    metadata = data["metadata"];
+    console.log(metadata);
     delete metadata["doi"];
     metadata["prereserve_doi"] = true;
+    console.log(metadata);
     metadata = helper_1.updateMetadata(args, metadata);
     //console.log(JSON.stringify(metadata));
-    response_data = createRecord(args, metadata);
-    console.log(JSON.stringify(response_data));
+    response_data = await createRecord(args, metadata);
+    console.log(response_data);
     bucket_url = response_data["links"]["bucket"];
     deposit_url = response_data["links"]["html"];
     if (args.files) {
         args.files.forEach(async function (filePath) {
             await fileUpload(args, bucket_url, filePath);
+        }).then(async () => {
+            await finalActions(args, response_data["id"], deposit_url);
         });
     }
     await finalActions(args, response_data["id"], deposit_url);
@@ -504,6 +509,8 @@ async function newVersion(args) {
             console.log("latest_draft: ", response_data["links"]["latest_draft"]);
         });
     }
+    await finalActions(args, response_data["id"], deposit_url);
+    console.log("latest_draft: ", response_data["links"]["latest_draft"]);
 }
 exports.newVersion = newVersion;
 async function download(args) {
