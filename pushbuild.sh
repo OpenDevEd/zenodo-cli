@@ -1,6 +1,6 @@
-#!/bin/sh
+#!/usr/bin/bash
 set -x
 git add .
-git commit -m "quick commit - intermediate version for pair coding"
+git commit -m "quick commit. $1"
 git push
 npm run build
