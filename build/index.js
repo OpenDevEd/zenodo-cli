@@ -330,15 +330,9 @@ if (args.dryrun) {
     console.log(`API command:\n ZenodoAPI.${args.func.name}(${JSON.stringify(args, null, 2)})`);
 }
 else {
-    // ZenodoAPI(args)
+    // ZenodoAPI.${args.func.name}(args)
     args.func(args);
 }
-/*
-// In API-LIB:
-async function ZenodoAPI(args) {
-    args.func(args);
-}
-*/
 module.exports = {
     node: 'current'
 };

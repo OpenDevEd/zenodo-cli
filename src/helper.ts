@@ -3,19 +3,6 @@ import * as fs from "fs";
 
 const FALLBACK_CONFIG_FILE = (process.env.HOME + "/.config/zenodo-cli/config.json");
 
-/*
-export function in_es6(left, right) {
-  if (((right instanceof Array) || ((typeof right) === "string"))) {
-    return (right.indexOf(left) > (-1));
-  } else {
-    if (((right instanceof Map) || (right instanceof Set) || (right instanceof WeakMap) || (right instanceof WeakSet))) {
-      return right.has(left);
-    } else {
-      return (left.indexOf(right) !== -1);
-    }
-  }
-}
-*/
 
 export function loadConfig(configFile) {
   //console.log("load file checking ...")
@@ -259,44 +246,3 @@ export function updateMetadata(args, metadata) {
   // console.log(JSON.stringify(metadata))
   return metadata;
 }
-
-/*
-
-{
-  "access_right": "open",
-  "communities": [
-    {
-      "identifier": "ode"
-    },
-    {
-      "identifier": "publicgoods"
-    },
-    {
-      "identifier": "zenodo"
-    }
-  ],
-  "creators": [
-    {
-      "name": "Haßler, Björn"
-      "affiliation": "(affiliation)"
-
-    },
-    {
-      "name": "Haseloff, Gesine"
-    }
-  ],
-  "description": "<p>This report provides an in-depth overview about the research on technical and vocational education and training (TVET) in Sub-Saharan Africa, to identify gaps in the research and provide the impetus for further research and the formation of international research networks in TVET in Sub-Saharan Africa. This report (in English) is an expanded and revised version of an earlier report, published in 2019 in German (https://lit.bibb.de/vufind/Record/DS-184013). The present report covers the research design (methodological approach) of the report; the quality and relevance of the publications found on TVET; the concept and practice of TVET; stakeholders in TVET research and their networks; topics, perspectives and current debates of TVET research; a systematic review of reliable studies on TVET in SS; models for the design, development and delivery of TVET; gender issues; key state actors; the importance of non-governmental actors in TVET; national standards, guidelines and quality frameworks; challenges that arise when implementing guidelines and political decisions; influencing institutional framework conditions; networks for research. The final chapter offers a summary and &mdash; based on this &mdash; directs our attention to possible future developments regarding TVET and TVET research. A number of appendices present additional information, such as an annotated bibliography, the full bibliography for the report, the methodology for the interviews and structured community review, and the results of the structured community review, as well as a list of additional materials for the report.</p>",
-  "doi": "10.5281/zenodo.3572897",
-  "license": "CC-BY-4.0",
-  "prereserve_doi": {
-    "doi": "10.5281/zenodo.3572897",
-    "recid": 3572897
-  },
-  "publication_date": "2020-10-29",
-  "publication_type": "report",
-  "title": "Technical and Vocational Education and Training in Sub-Saharan Africa: A Systematic Review of the Research Landscape",
-  "upload_type": "publication",
-  "version": "0"
-}
-
-*/
