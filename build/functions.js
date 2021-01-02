@@ -287,6 +287,7 @@ async function finalActions(args, id, deposit_url) {
     // if (verbose) {
     console.log("final actions");
     // }
+    // the record should be includes contains files.
     if (("publish" in args) && args.publish) {
         await publishDeposition(args, id);
     }
@@ -408,7 +409,7 @@ async function update(args) {
     if (args.files) {
         args.files.forEach(async function (filePath) {
             await fileUpload(args, bucket_url, filePath).then(async () => {
-                // TO DO
+                // TO DO:DONE
                 // Wait for promises to complete before calling final actions:
                 await finalActions(args, id, deposit_url);
             });
