@@ -68,30 +68,6 @@ async function apiCallFileUpload(args, options, fullResponse = false) {
 
 }
 
-//TODO:
-/*
-async function apiCallGet(args, options, fullResponse = false) {
- 
-  console.log(`API CALL GET`)
-  const resData = await axios(options).then(res => {
-    if ("verbose" in args && args.verbose) {
-      console.log(`response status code: ${res.status}`)
-      zenodoMessage(res.status)
-    }
-    if (fullResponse) {
-      return res;
-    } else {
-      return res.data;
-    }
-  }).catch( function (err) {
-    axiosError(err)
-    console.log(err);
-  });
-
-  return resData;
-
-}
-*/
 
 async function publishDeposition(args, id) {
   id = parseId(id);
@@ -252,26 +228,9 @@ async function updateRecord(args, dep_id, metadata) {
   const responseDataFromAPIcall = await apiCall(args, options);
 
   return responseDataFromAPIcall;
-
-
-  /*
-  previous code:
-  console.log("\tUpdating record.");
-  const { zenodoAPIUrl, params } = loadConfig(args.config);
-  const payload = { "metadata": metadata }
-  const options = { headers: { 'Content-Type': "application/json" }, params: params }
-  console.log(`${zenodoAPIUrl}/${parseId(dep_id)}`);
-  let response = await axios.put(`${zenodoAPIUrl}/${parseId(dep_id)}`, payload, options)
-  .then(res => {
-      console.log(res.data);
-      return res.data; // "Some User token"
-    })
-   return response;
-   */
 }
-/*
 
-*/
+
 async function fileUpload(args, bucket_url, journal_filepath) {
   const { params } = loadConfig(args.config);
   console.log("Uploading file.");
@@ -400,6 +359,7 @@ export async function upload(args) {
   }
 }
 
+// Top-level function - verb 'update'
 export async function update(args) {
   let bucket_url, data, deposit_url, id;
   let metadata;
@@ -425,10 +385,11 @@ export async function update(args) {
       await fileUpload(args, bucket_url, filePath).then( async()=>{
            // TO DO:DONE
            // Wait for promises to complete before calling final actions:
-           await finalActions(args, id, deposit_url);
+           // await finalActions(args, id, deposit_url);
       });
     })  
   }
+  // As top-level function, execute final actions.
   await finalActions(args, id, deposit_url);
 }
 
