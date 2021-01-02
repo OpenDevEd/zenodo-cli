@@ -345,14 +345,13 @@ async function duplicate(args) {
     let data = await getData(args, args.id[0]);
     //getMetadata(args,args.id[0]);
     metadata = data["metadata"];
-    console.log(metadata);
+    //console.log(metadata);
     delete metadata["doi"];
     metadata["prereserve_doi"] = true;
-    console.log(metadata);
+    //console.log(metadata);
     metadata = helper_1.updateMetadata(args, metadata);
-    //console.log(JSON.stringify(metadata));
     response_data = await createRecord(args, metadata);
-    console.log(response_data);
+    //console.log(response_data);
     bucket_url = response_data["links"]["bucket"];
     deposit_url = response_data["links"]["html"];
     if (args.files) {
@@ -492,9 +491,10 @@ async function newVersion(args) {
         headers: { 'Content-Type': "application/json" },
     };
     const responseDataFromAPIcall = await apiCall(args, options);
+    console.log(responseDataFromAPIcall);
     //return responseDataFromAPIcall;
-    let response_data = responseDataFromAPIcall.data;
-    const metadata = await getMetadata(args, id);
+    let response_data = responseDataFromAPIcall;
+    const metadata = responseDataFromAPIcall["metadata"];
     const newmetadata = helper_1.updateMetadata(args, metadata);
     if ((newmetadata !== metadata)) {
         response_data = updateRecord(args, id, newmetadata);

@@ -509,10 +509,11 @@ export async function newVersion(args) {
   }
 
   const responseDataFromAPIcall = await apiCall(args, options);
+  console.log(responseDataFromAPIcall);
   //return responseDataFromAPIcall;
-
-  let response_data = responseDataFromAPIcall.data;
-  const metadata = await getMetadata(args, id);
+ 
+  let response_data = responseDataFromAPIcall;
+  const metadata = responseDataFromAPIcall["metadata"];
   const newmetadata = updateMetadata(args, metadata);
   if ((newmetadata !== metadata)) {
     response_data = updateRecord(args, id, newmetadata);
