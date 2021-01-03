@@ -24,7 +24,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.create = exports.concept = exports.download = exports.newVersion = exports.listDepositions = exports.copy = exports.update = exports.upload = exports.duplicate = exports.dumpDeposition = exports.getRecord = void 0;
 const axios_1 = __importDefault(require("axios"));
-const console_1 = require("console");
+// import { debug as debug } from 'console';
 const fs = __importStar(require("fs"));
 const opn_1 = __importDefault(require("opn"));
 //for catch:
@@ -34,8 +34,9 @@ const opn_1 = __importDefault(require("opn"));
 const helper_1 = require("./helper");
 async function apiCall(args, options, fullResponse = false) {
     console.log(`API CALL`);
-    console_1.debug(args, "apiCall: options=", options);
-    console_1.debug(args, "apiCall: fullResponse=", fullResponse);
+    helper_1.mydebug(args, "apiCall: args=", args);
+    helper_1.mydebug(args, "apiCall: options=", options);
+    helper_1.mydebug(args, "apiCall: fullResponse=", fullResponse);
     try {
         const resData = await axios_1.default(options).then(res => {
             console.log("then response");
@@ -57,12 +58,12 @@ async function apiCall(args, options, fullResponse = false) {
             axiosError(err);
             return null;
         });
-        console_1.debug(args, "apiCall: data", resData);
+        helper_1.mydebug(args, "apiCall: data", resData);
         return resData;
     }
     catch (e) {
         console.log("ERROR");
-        console_1.debug(args, "error in calling axios", e);
+        helper_1.mydebug(args, "error in calling axios", e);
         return null;
     }
 }
@@ -112,10 +113,9 @@ async function showDeposition(args, id) {
 }
 async function getData(args, id) {
     const { zenodoAPIUrl, params } = helper_1.loadConfig(args.config);
-    console.log(`getting data for ${id}`);
+    helper_1.myverbose(args, `getting data for ${id}`, null);
     id = helper_1.parseId(id);
-    console.log(id);
-    console.log(`${zenodoAPIUrl}/${id}`);
+    helper_1.myverbose(args, `getting data for ${id}`, null);
     let options = {
         method: 'get',
         url: `${zenodoAPIUrl}`,
@@ -124,13 +124,11 @@ async function getData(args, id) {
     };
     //Checking Concept. 
     options["params"]["q"] = String("conceptrecid:" + id + " OR recid:" + id);
-    const searchParams = { params };
-    searchParams["q"] = String("conceptrecid:" + id + " OR recid:" + id);
-    //console.log(options)
+    //const searchParams = { params };
+    //searchParams["q"] = String("conceptrecid:" + id + " OR recid:" + id);
     try {
-        console.log(`start ${zenodoAPIUrl}/${id}`);
-        const responseDataFromAPIcall = await axios_1.default.get(`${zenodoAPIUrl}`, searchParams);
-        //const responseDataFromAPIcall = await apiCallGet(args, options)
+        //const responseDataFromAPIcall = await axios.get(`${zenodoAPIUrl}`, searchParams)
+        const responseDataFromAPIcall = await apiCall(args, options);
         console.log(`done`);
         // If the id was a conceptid, we need to let the calling function know.
         // Called id=077 
@@ -147,8 +145,9 @@ async function getData(args, id) {
         }
         // Instead of this we could say
           console.log("WARNING: concept id provided (077). Record ID is 078. In order to use concept ids, please add the following switch: --allowconceptids ")
-        */
-        return responseDataFromAPIcall.data[0];
+          */
+        helper_1.myverbose(args, "final data: ", responseDataFromAPIcall[0]);
+        return responseDataFromAPIcall[0];
     }
     catch (error) {
         console.log("ERROR getData/responseDataFromAPIcall: " + error);
@@ -160,7 +159,7 @@ async function getMetadata(args, id) {
 }
 async function createRecord(args, metadata) {
     console.log("Creating record.");
-    console_1.debug(args, "zenodo.createRecord", args);
+    helper_1.mydebug(args, "zenodo.createRecord", args);
     const { zenodoAPIUrl, params } = helper_1.loadConfig(args.config);
     /*
       console.log(`URI:    ${zenodoAPIUrl}`)
@@ -194,7 +193,7 @@ async function createRecord(args, metadata) {
         data: payload
     };
     const responseDataFromAPIcall = await apiCall(args, options);
-    console_1.debug(args, "zenodo.createRecord/final", responseDataFromAPIcall);
+    helper_1.mydebug(args, "zenodo.createRecord/final", responseDataFromAPIcall);
     return responseDataFromAPIcall;
 }
 async function editDeposit(args, dep_id) {
@@ -265,7 +264,7 @@ async function finalActions(args, id, deposit_url) {
     });
 }
 async function finalActions2(args, data) {
-    console_1.debug(args, "finalActions2", data);
+    helper_1.mydebug(args, "finalActions2", data);
     // the record need to contains files.
     // TODO: Whether whethr this is the case?
     let return_value = data;
@@ -285,7 +284,7 @@ async function finalActions2(args, data) {
         //webbrowser.open_new_tab(deposit_url);
         opn_1.default(deposit_url);
     }
-    console_1.debug(args, "finalActions2, rv", return_value);
+    helper_1.mydebug(args, "finalActions2, rv", return_value);
     return return_value;
 }
 // Top-level function - "zenodo-cli get'
@@ -424,7 +423,7 @@ async function copy(args) {
 exports.copy = copy;
 // Top-level function - "zenodo-cli list'
 async function listDepositions(args) {
-    console_1.debug(args, "listDepositions", args);
+    helper_1.mydebug(args, "listDepositions", args);
     const { zenodoAPIUrl, params } = helper_1.loadConfig(args.config);
     params["page"] = args.page;
     params["size"] = (args.size ? args.size : 1000);
@@ -434,7 +433,7 @@ async function listDepositions(args) {
         params: params
     };
     const res = await apiCall(args, options);
-    console_1.debug(args, "listDepositions: apiCall", res);
+    helper_1.mydebug(args, "listDepositions: apiCall", res);
     // Perform a separate dump to capture this response.
     if ("dump" in args && args.dump) {
         helper_1.dumpJSON(res);
@@ -461,7 +460,7 @@ async function listDepositions(args) {
             newres.push(resfa);
         });
         // TODO - check. This is the right array, but not contains a promise... 
-        console_1.debug(args, "listDepositions: final", newres);
+        helper_1.mydebug(args, "listDepositions: final", newres);
         return newres;
     }
     // return data to calling function:
@@ -471,7 +470,13 @@ exports.listDepositions = listDepositions;
 async function newVersion(args) {
     const { zenodoAPIUrl, params } = helper_1.loadConfig(args.config);
     const id = helper_1.parseId(args.id[0]);
-    // TODO:DONE
+    // Let's check a new version is possible.
+    const data = await getData(args, id);
+    if (!(data["state"] == "done" && data["submitted"])) {
+        console.log("This record is not final - cannot create new version.");
+        return null;
+    }
+    // New version is possible - make one.
     const options = {
         method: 'post',
         url: `${zenodoAPIUrl}/${id}/actions/newversion`,
@@ -602,7 +607,7 @@ async function concept(args) {
 exports.concept = concept;
 // Top-level function - "zenodo-cli create'
 async function create(args) {
-    console_1.debug(args, "zenodo.create", args);
+    helper_1.mydebug(args, "zenodo.create", args);
     // Note that Zenodo does not require a date or a DOI, but it will generate those on creation.
     const blankJson = `{
     "access_right": "open",
@@ -639,7 +644,7 @@ async function create(args) {
     if (response_data_2) {
         response_data = response_data_2;
     }
-    console_1.debug(args, "zenodo.create/final", response_data);
+    helper_1.mydebug(args, "zenodo.create/final", response_data);
     return response_data;
 }
 exports.create = create;

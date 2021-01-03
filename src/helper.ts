@@ -80,7 +80,7 @@ export function parseIds(genericIds) {
   let ids = []
   genericIds.forEach(id => {
     ids.push(parseId(id))
-  }); 
+  });
   return ids;
 }
 
@@ -200,7 +200,7 @@ export function updateMetadata(args, metadata) {
   //console.log(`DataIn: ${dataIn}`);
   if (Object.keys(metadata).indexOf("communities") !== -1) {
     let metadataCommunities = metadata["communities"];
-      metadataCommunities.forEach(thisCommunity => {
+    metadataCommunities.forEach(thisCommunity => {
       communitiesArray.push(thisCommunity["identifier"]);
     })
   }
@@ -247,26 +247,29 @@ export function updateMetadata(args, metadata) {
   return metadata;
 }
 
-export function debug(args, msg, data) {
+export function mydebug(args, msg, data) {
   if (args &&
-      (
-          ("debug" in args && args.debug)
-          ||
-          ("verbose" in args && args.verbose)
-      )
+    (
+      ("debug" in args && args.debug)
+    )
   ) {
-      console.log('DEBUG: ' + msg);
-      if (data) {
-          console.log(JSON.stringify(data, null, 2))
-      }
+    console.log('DEBUG: ' + msg);
+    if (data) {
+      console.log(JSON.stringify(data, null, 2))
+    }
   }
 }
 
-export function verbose(args, msg, data) {
-  if (args && "verbose" in args && args.verbose) {
-      console.log('VERBOSE: ' + msg);
-      if (data) {
-          console.log(JSON.stringify(data, null, 2))
-      }
+export function myverbose(args, msg, data) {
+  if (args &&
+    (
+      ("verbose" in args && args.verbose)
+      ||
+      ("debug" in args && args.debug)
+    )) {
+    console.log('VERBOSE: ' + msg);
+    if (data) {
+      console.log(JSON.stringify(data, null, 2))
+    }
   }
 }

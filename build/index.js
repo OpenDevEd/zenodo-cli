@@ -30,7 +30,12 @@ function getArguments() {
     });
     parser.add_argument("--verbose", {
         "action": "store_true",
-        "help": "Show response status after calling the API",
+        "help": "Be more verbose",
+        "default": false
+    });
+    parser.add_argument("--debug", {
+        "action": "store_true",
+        "help": "Show as much information as possible.",
         "default": false
     });
     parser.add_argument("--dryrun", {
