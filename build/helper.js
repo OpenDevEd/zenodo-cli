@@ -19,7 +19,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updateMetadata = exports.parseIds = exports.dumpJSON = exports.showDepositionJSON = exports.parseId = exports.loadConfig = void 0;
+exports.verbose = exports.debug = exports.updateMetadata = exports.parseIds = exports.dumpJSON = exports.showDepositionJSON = exports.parseId = exports.loadConfig = void 0;
 const fs = __importStar(require("fs"));
 const FALLBACK_CONFIG_FILE = (process.env.HOME + "/.config/zenodo-cli/config.json");
 function loadConfig(configFile) {
@@ -268,4 +268,25 @@ function updateMetadata(args, metadata) {
     return metadata;
 }
 exports.updateMetadata = updateMetadata;
+function debug(args, msg, data) {
+    if (args &&
+        (("debug" in args && args.debug)
+            ||
+                ("verbose" in args && args.verbose))) {
+        console.log('DEBUG: ' + msg);
+        if (data) {
+            console.log(JSON.stringify(data, null, 2));
+        }
+    }
+}
+exports.debug = debug;
+function verbose(args, msg, data) {
+    if (args && "verbose" in args && args.verbose) {
+        console.log('VERBOSE: ' + msg);
+        if (data) {
+            console.log(JSON.stringify(data, null, 2));
+        }
+    }
+}
+exports.verbose = verbose;
 //# sourceMappingURL=helper.js.map

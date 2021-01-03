@@ -24,6 +24,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.create = exports.concept = exports.download = exports.newVersion = exports.listDepositions = exports.copy = exports.update = exports.upload = exports.duplicate = exports.dumpDeposition = exports.getRecord = void 0;
 const axios_1 = __importDefault(require("axios"));
+const console_1 = require("console");
 const fs = __importStar(require("fs"));
 const opn_1 = __importDefault(require("opn"));
 //for catch:
@@ -77,30 +78,6 @@ async function apiCallFileUpload(args, options, fullResponse = false) {
     });
     return resData;
 }
-//TODO:
-/*
-async function apiCallGet(args, options, fullResponse = false) {
- 
-  console.log(`API CALL GET`)
-  const resData = await axios(options).then(res => {
-    if ("verbose" in args && args.verbose) {
-      console.log(`response status code: ${res.status}`)
-      zenodoMessage(res.status)
-    }
-    if (fullResponse) {
-      return res;
-    } else {
-      return res.data;
-    }
-  }).catch( function (err) {
-    axiosError(err)
-    console.log(err);
-  });
-
-  return resData;
-
-}
-*/
 async function publishDeposition(args, id) {
     id = helper_1.parseId(id);
     const { zenodoAPIUrl, params } = helper_1.loadConfig(args.config);
@@ -245,24 +222,7 @@ async function updateRecord(args, dep_id, metadata) {
     };
     const responseDataFromAPIcall = await apiCall(args, options);
     return responseDataFromAPIcall;
-    /*
-    previous code:
-    console.log("\tUpdating record.");
-    const { zenodoAPIUrl, params } = loadConfig(args.config);
-    const payload = { "metadata": metadata }
-    const options = { headers: { 'Content-Type': "application/json" }, params: params }
-    console.log(`${zenodoAPIUrl}/${parseId(dep_id)}`);
-    let response = await axios.put(`${zenodoAPIUrl}/${parseId(dep_id)}`, payload, options)
-    .then(res => {
-        console.log(res.data);
-        return res.data; // "Some User token"
-      })
-     return response;
-     */
 }
-/*
-
-*/
 async function fileUpload(args, bucket_url, journal_filepath) {
     const { params } = helper_1.loadConfig(args.config);
     console.log("Uploading file.");
@@ -284,12 +244,21 @@ async function fileUpload(args, bucket_url, journal_filepath) {
     return responseDataFromAPIcall;
 }
 async function finalActions(args, id, deposit_url) {
-    // if (verbose) {
-    console.log("final actions");
-    // }
-    // the record should be includes contains files.
+    return finalActions2(args, {
+        id: id,
+        links: { html: deposit_url }
+    });
+}
+async function finalActions2(args, data) {
+    console_1.debug(args, "finalActions2", data);
+    // the record need to contains files.
+    // TODO: Whether whethr this is the case?
+    let return_value = data;
+    const id = data["id"];
+    const deposit_url = data["links"]["html"];
     if (("publish" in args) && args.publish) {
-        await publishDeposition(args, id);
+        // publishDeposition will change the data, hence collecting return_value
+        return_value = await publishDeposition(args, id);
     }
     if (("show" in args) && args.show) {
         await showDeposition(args, id);
@@ -301,7 +270,10 @@ async function finalActions(args, id, deposit_url) {
         //webbrowser.open_new_tab(deposit_url);
         opn_1.default(deposit_url);
     }
+    console_1.debug(args, "finalActions2, rv", return_value);
+    return return_value;
 }
+// Top-level function - "zenodo-cli get'
 async function getRecord(args) {
     let data, ids;
     ids = helper_1.parseIds(args.id);
@@ -389,6 +361,7 @@ async function upload(args) {
     }
 }
 exports.upload = upload;
+// Top-level function - "zenodo-cli update'
 async function update(args) {
     let bucket_url, data, deposit_url, id;
     let metadata;
@@ -411,10 +384,11 @@ async function update(args) {
             await fileUpload(args, bucket_url, filePath).then(async () => {
                 // TO DO:DONE
                 // Wait for promises to complete before calling final actions:
-                await finalActions(args, id, deposit_url);
+                // await finalActions(args, id, deposit_url);
             });
         });
     }
+    // As top-level function, execute final actions.
     await finalActions(args, id, deposit_url);
 }
 exports.update = update;
@@ -433,32 +407,22 @@ async function copy(args) {
     });
 }
 exports.copy = copy;
+// Top-level function - "zenodo-cli list'
 async function listDepositions(args) {
+    console_1.debug(args, "listDepositions", args);
     const { zenodoAPIUrl, params } = helper_1.loadConfig(args.config);
     params["page"] = args.page;
     params["size"] = (args.size ? args.size : 1000);
-    /*
-    const optipns = {
-      method:'get',
-  
-    }
-    // GET request for remote image in node.js
-  axios({
-    method: 'get',
-    url: 'http://bit.ly/2mTM3nY',
-    responseType: 'stream'
-    })
-    .then(function (response) {
-      response.data.pipe(fs.createWriteStream('ada_lovelace.jpg'))
-    });
-  */
-    const res = await axios_1.default.get(zenodoAPIUrl, { params });
-    if ((res.status !== 200)) {
-        console.log(`Failed in listDepositions: ${res.data}`);
-        process.exit(1);
-    }
+    const options = {
+        method: 'get',
+        url: zenodoAPIUrl,
+        params: params
+    };
+    const res = await apiCall(args, options);
+    console_1.debug(args, "listDepositions: apiCall", res);
+    // Perform a separate dump to capture this response.
     if ("dump" in args && args.dump) {
-        helper_1.dumpJSON(res.data);
+        helper_1.dumpJSON(res);
     }
     if ("publish" in args && args.publish) {
         console.log("Warning: using 'list' with '--publish' means that all of your depositions will be published. Please confirm by typing yes.");
@@ -474,11 +438,19 @@ async function listDepositions(args) {
         });
         */
     }
-    var arr = res.data;
-    arr.forEach(async function (dep) {
-        console.log(dep["record_id"], dep["conceptrecid"]);
-        await finalActions(args, dep["id"], dep["links"]["html"]);
-    });
+    if (res.length > 0) {
+        var newres = [];
+        await res.forEach(async function (item) {
+            console.log(item["record_id"], item["conceptrecid"]);
+            const resfa = finalActions2(args, item);
+            newres.push(resfa);
+        });
+        // TODO - check. This is the right array, but not contains a promise... 
+        console_1.debug(args, "listDepositions: final", newres);
+        return newres;
+    }
+    // return data to calling function:
+    return res;
 }
 exports.listDepositions = listDepositions;
 async function newVersion(args) {
@@ -613,7 +585,9 @@ async function concept(args) {
     });
 }
 exports.concept = concept;
+// Top-level function - "zenodo-cli create'
 async function create(args) {
+    console_1.debug(args, "create", args);
     // Note that Zenodo does not require a date or a DOI, but it will generate those on creation.
     const blankJson = `{
     "access_right": "open",
@@ -639,13 +613,19 @@ async function create(args) {
     const metadata = helper_1.updateMetadata(args, JSON.parse(blankJson));
     let response_data;
     response_data = await createRecord(args, metadata);
-    console.log(response_data);
+    console.log("RESP: " + response_data);
+    let response_data_2 = null;
     if (response_data) {
-        await finalActions(args, response_data["id"], response_data["links"]["html"]);
+        response_data_2 = await finalActions2(args, response_data);
     }
     else {
         console.log("Record creation failed.");
     }
+    if (response_data_2) {
+        response_data = response_data_2;
+    }
+    console_1.debug(args, "create/final", response_data);
+    return response_data;
 }
 exports.create = create;
 async function axiosError(error) {

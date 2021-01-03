@@ -9,3 +9,5 @@ export declare function showDepositionJSON(info: any): void;
 export declare function dumpJSON(info: any): void;
 export declare function parseIds(genericIds: any): any[];
 export declare function updateMetadata(args: any, metadata: any): any;
+export declare function debug(args: any, msg: any, data: any): void;
+export declare function verbose(args: any, msg: any, data: any): void;

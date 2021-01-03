@@ -246,3 +246,27 @@ export function updateMetadata(args, metadata) {
   // console.log(JSON.stringify(metadata))
   return metadata;
 }
+
+export function debug(args, msg, data) {
+  if (args &&
+      (
+          ("debug" in args && args.debug)
+          ||
+          ("verbose" in args && args.verbose)
+      )
+  ) {
+      console.log('DEBUG: ' + msg);
+      if (data) {
+          console.log(JSON.stringify(data, null, 2))
+      }
+  }
+}
+
+export function verbose(args, msg, data) {
+  if (args && "verbose" in args && args.verbose) {
+      console.log('VERBOSE: ' + msg);
+      if (data) {
+          console.log(JSON.stringify(data, null, 2))
+      }
+  }
+}
