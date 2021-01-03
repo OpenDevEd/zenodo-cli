@@ -14,31 +14,40 @@ import {
   parseId,
   parseIds,
   showDepositionJSON,
-  updateMetadata
+  updateMetadata,
 } from "./helper";
 
 async function apiCall(args, options, fullResponse = false) {
-
   console.log(`API CALL`)
-  const resData = await axios(options).then(res => {
-    if ("verbose" in args && args.verbose) {
-      console.log(`response status code: ${res.status}`)
-      zenodoMessage(res.status)
-    }
-    if (fullResponse) {
-      return res;
-    } else {
-      return res.data;
-    }
-  }).catch(function (err) {
-    if ("verbose" in args && args.verbose) {
-      console.log(err);
-    }
-    axiosError(err)
-  });
-
-  return resData;
-
+  debug(args, "apiCall: options=", options)
+  debug(args, "apiCall: fullResponse=", fullResponse)
+  try {
+    const resData = await axios(options).then(res => {
+      console.log("then response")
+      if ("verbose" in args && args.verbose) {
+        console.log(`response status code: ${res.status}`)
+        zenodoMessage(res.status)
+      }
+      if (fullResponse) {
+        return res;
+      } else {
+        return res.data;
+      }
+    }).catch(function (err) {
+      console.log("err response")
+      if ("verbose" in args && args.verbose) {
+        console.log(err);
+      }
+      axiosError(err)
+      return null
+    });
+    debug(args, "apiCall: data", resData)
+    return resData
+  } catch (e) {
+    console.log("ERROR")
+    debug(args, "error in calling axios", e)
+    return null
+  }
 }
 
 //Note: This is API call for [File upload] because the [header] is different in this case.
@@ -143,7 +152,8 @@ async function getMetadata(args, id) {
 }
 
 async function createRecord(args, metadata) {
-  console.log("\tCreating record.");
+  console.log("Creating record.");
+  debug(args, "zenodo.createRecord", args)
   const { zenodoAPIUrl, params } = loadConfig(args.config);
   /* 
     console.log(`URI:    ${zenodoAPIUrl}`)
@@ -178,6 +188,7 @@ async function createRecord(args, metadata) {
   }
 
   const responseDataFromAPIcall = await apiCall(args, options);
+  debug(args, "zenodo.createRecord/final", responseDataFromAPIcall)
 
   return responseDataFromAPIcall;
 
@@ -630,7 +641,7 @@ export async function concept(args) {
 
 // Top-level function - "zenodo-cli create'
 export async function create(args) {
-  debug(args,"create",args)
+  debug(args, "zenodo.create", args)
   // Note that Zenodo does not require a date or a DOI, but it will generate those on creation.
   const blankJson = `{
     "access_right": "open",
@@ -666,7 +677,7 @@ export async function create(args) {
   if (response_data_2) {
     response_data = response_data_2
   }
-  debug(args,"create/final",response_data)
+  debug(args, "zenodo.create/final", response_data)
   return response_data
 }
 

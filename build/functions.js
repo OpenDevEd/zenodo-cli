@@ -34,24 +34,37 @@ const opn_1 = __importDefault(require("opn"));
 const helper_1 = require("./helper");
 async function apiCall(args, options, fullResponse = false) {
     console.log(`API CALL`);
-    const resData = await axios_1.default(options).then(res => {
-        if ("verbose" in args && args.verbose) {
-            console.log(`response status code: ${res.status}`);
-            zenodoMessage(res.status);
-        }
-        if (fullResponse) {
-            return res;
-        }
-        else {
-            return res.data;
-        }
-    }).catch(function (err) {
-        if ("verbose" in args && args.verbose) {
-            console.log(err);
-        }
-        axiosError(err);
-    });
-    return resData;
+    console_1.debug(args, "apiCall: options=", options);
+    console_1.debug(args, "apiCall: fullResponse=", fullResponse);
+    try {
+        const resData = await axios_1.default(options).then(res => {
+            console.log("then response");
+            if ("verbose" in args && args.verbose) {
+                console.log(`response status code: ${res.status}`);
+                zenodoMessage(res.status);
+            }
+            if (fullResponse) {
+                return res;
+            }
+            else {
+                return res.data;
+            }
+        }).catch(function (err) {
+            console.log("err response");
+            if ("verbose" in args && args.verbose) {
+                console.log(err);
+            }
+            axiosError(err);
+            return null;
+        });
+        console_1.debug(args, "apiCall: data", resData);
+        return resData;
+    }
+    catch (e) {
+        console.log("ERROR");
+        console_1.debug(args, "error in calling axios", e);
+        return null;
+    }
 }
 //Note: This is API call for [File upload] because the [header] is different in this case.
 async function apiCallFileUpload(args, options, fullResponse = false) {
@@ -146,7 +159,8 @@ async function getMetadata(args, id) {
     return await getData(args, id)["metadata"];
 }
 async function createRecord(args, metadata) {
-    console.log("\tCreating record.");
+    console.log("Creating record.");
+    console_1.debug(args, "zenodo.createRecord", args);
     const { zenodoAPIUrl, params } = helper_1.loadConfig(args.config);
     /*
       console.log(`URI:    ${zenodoAPIUrl}`)
@@ -180,6 +194,7 @@ async function createRecord(args, metadata) {
         data: payload
     };
     const responseDataFromAPIcall = await apiCall(args, options);
+    console_1.debug(args, "zenodo.createRecord/final", responseDataFromAPIcall);
     return responseDataFromAPIcall;
 }
 async function editDeposit(args, dep_id) {
@@ -587,7 +602,7 @@ async function concept(args) {
 exports.concept = concept;
 // Top-level function - "zenodo-cli create'
 async function create(args) {
-    console_1.debug(args, "create", args);
+    console_1.debug(args, "zenodo.create", args);
     // Note that Zenodo does not require a date or a DOI, but it will generate those on creation.
     const blankJson = `{
     "access_right": "open",
@@ -624,7 +639,7 @@ async function create(args) {
     if (response_data_2) {
         response_data = response_data_2;
     }
-    console_1.debug(args, "create/final", response_data);
+    console_1.debug(args, "zenodo.create/final", response_data);
     return response_data;
 }
 exports.create = create;
