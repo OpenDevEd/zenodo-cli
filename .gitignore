@@ -1,6 +1,9 @@
-*.json
+node_modules
 node_modules/*
-.vs/*
+BaCkUp
 BaCkUp/*
+*/BaCkUp/*
 *~
 */*~
+*.json
+.vs/*

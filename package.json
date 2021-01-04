@@ -18,7 +18,8 @@
     "request-promise-native": "^1.0.9",
     "requests": "^0.3.0",
     "sys": "0.0.1",
-    "zenodo-lib": "^1.0.1"
+    "zenodo-lib": "^1.0.2",
+    "request": "^2.34"
   },
   "devDependencies": {
     "@types/argparse": "^2.0.4",
@@ -41,12 +42,12 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/bjohas/Zenodo-tools.git"
+    "url": "git+https://github.com/opendeved/zenodo-cli.git"
   },
-  "author": "Björn Haßler",
+  "author": "opendeved",
   "license": "",
   "bugs": {
-    "url": "https://github.com/bjohas/Zenodo-tools/issues"
+    "url": "https://github.com/opendeved/zenodo-cli/issues"
   },
-  "homepage": "https://github.com/bjohas/Zenodo-tools#readme"
+  "homepage": "https://github.com/opendeved/zenodo-cli#readme"
 }
