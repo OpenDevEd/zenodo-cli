@@ -412,7 +412,7 @@ export async function update(args) {
       await fileUpload(args, bucket_url, filePath).then(async () => {
         // TO DO:DONE
         // Wait for promises to complete before calling final actions:
-        // await finalActions(args, id, deposit_url);
+          await finalActions(args, id, deposit_url);
       });
     })
   }
@@ -695,7 +695,7 @@ async function axiosError(error) {
     console.log('Error4', error.response.data.message);
     // if (verbose) {
     //  console.log(error.response.data);
-    //  console.log(error.response.headers);
+    //  console.log(error.response.headers)
     // }
   } else if (error.request) {
     console.log(`The request was made but no response was received
