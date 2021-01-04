@@ -25,18 +25,21 @@ async function apiCall(args, options, fullResponse = false) {
   mydebug(args, "apiCall: fullResponse=", fullResponse)
   try {
     const resData = await axios(options).then(res => {
-      console.log("then response")
+      console.log("axios.then->response")
       if ("verbose" in args && args.verbose) {
         console.log(`response status code: ${res.status}`)
+        console.log(`response status text: ${res.statusText}`)
         zenodoMessage(res.status)
+        console.log(`keys: ${Object.keys(res)}`)
       }
+      mydebug(args, "apiCall: response=", res.headers)
       if (fullResponse) {
         return res;
       } else {
         return res.data;
       }
     }).catch(function (err) {
-      console.log("err response")
+      console.log("axios.catch->response")
       if ("verbose" in args && args.verbose) {
         console.log(err);
       }
@@ -120,25 +123,22 @@ async function getData(args, id) {
   try {
     //const responseDataFromAPIcall = await axios.get(`${zenodoAPIUrl}`, searchParams)
     const responseDataFromAPIcall = await apiCall(args, options)
-    console.log(`done`)
-    // If the id was a conceptid, we need to let the calling function know.
-    // Called id=077 
-    // Function returns data anyway.
-    // Calling function assumes that id=077 is a valid id.
-    // TODO
-    // Check whether data.metadata.id == id
-    /*
-    if (data.metadata.id != id) {
-      console.log("WARNING: concept id provided (077). Record ID is 078. Operate on 078? Y/N")
-      if (yes) {
-        id = data.metadata.id
+    console.log("Response array: " + responseDataFromAPIcall.length)
+    if (responseDataFromAPIcall.length == 0) {
+      console.log("Response array: " + JSON.stringify(responseDataFromAPIcall))
+      console.log("ERROR getData/responseDataFromAPIcall (2).")
+      process.exit(1)
+    } else {
+      if (responseDataFromAPIcall[0].record_id != id) {
+        if (!args.allowconceptids) {
+          console.log(`Note: Concept id provided (${responseDataFromAPIcall[0].conceptrecid}). Record ID is ${responseDataFromAPIcall[0].record_id}.`)
+          // console.log( `In order to operate on records specified by conceptid, please add the following switch: --allowconceptids `)
+        }
+        // id = responseDataFromAPIcall[0].record_id
       }
+      myverbose(args, "final data: ", responseDataFromAPIcall[0])
+      return responseDataFromAPIcall[0]
     }
-    // Instead of this we could say 
-      console.log("WARNING: concept id provided (077). Record ID is 078. In order to use concept ids, please add the following switch: --allowconceptids ")
-      */
-    myverbose(args, "final data: ", responseDataFromAPIcall[0])
-    return responseDataFromAPIcall[0]
   } catch (error) {
     console.log("ERROR getData/responseDataFromAPIcall: " + error)
     process.exit(1)
@@ -286,6 +286,11 @@ async function finalActions2(args, data) {
   if (("publish" in args) && args.publish) {
     // publishDeposition will change the data, hence collecting return_value
     return_value = await publishDeposition(args, id);
+    if ((return_value["state"] == "done" && return_value["submitted"])) {
+      console.log("Record published successfully.")
+    } else {
+      console.log("ERROR IN PUBLISHING RECORD.")
+    }
   }
   if (("show" in args) && args.show) {
     await showDeposition(args, id);
@@ -297,7 +302,7 @@ async function finalActions2(args, data) {
     //webbrowser.open_new_tab(deposit_url);
     opn(deposit_url);
   }
-  mydebug(args, "finalActions2, rv", return_value)
+  mydebug(args, "finalActions2, return value = ", return_value)
   return return_value
 }
 
@@ -306,14 +311,20 @@ export async function getRecord(args) {
   let data, ids;
   ids = parseIds(args.id);
   ids.forEach(async function (id) {
-    console.log(`saveIdsToJson ---0`)
     data = await getData(args, id);
-    console.log(JSON.stringify(data))
-    console.log(`saveIdsToJson ---1a`)
+    mydebug(args, "getRecord", data)
+    if (id != data.record_id) {
+      if (args.allowconceptids) {
+        console.log(`Notice: Concept id provided (${data.conceptrecid}). Using record ID instead (${data.record_id}).`)
+        id = data.record_id
+      } else {
+        console.log(`WARNING: concept id provided (${data.conceptrecid}). Record ID is ${data.record_id}.`)
+        console.log(` In order to operate on records specified by conceptid, please add the following switch: --allowconceptids `)
+        process.exit(1)
+      }
+    }
     let path = `${id}.json`;
-    console.log(`saveIdsToJson ---1b`)
     let buffer = Buffer.from(JSON.stringify(data["metadata"]));
-    console.log(`saveIdsToJson ---2`)
     fs.open(path, 'w', function (err, fd) {
       if (err) {
         throw 'could not open file: ' + err;
@@ -329,9 +340,7 @@ export async function getRecord(args) {
         });
       });
     });
-    console.log(`saveIdsToJson ---3`)
-    await finalActions(args, id, data["links"]["html"]);
-    console.log(`saveIdsToJson ---4`)
+    await finalActions2(args, data);
   })
 }
 
@@ -365,7 +374,7 @@ export async function duplicate(args) {
 }
 
 export async function upload(args) {
-  var bucket_url, deposit_url, response;
+  let bucket_url, deposit_url, response;
   bucket_url = null;
   if (args.bucketurl) {
     bucket_url = args.bucketurl;
@@ -402,12 +411,19 @@ export async function update(args) {
     console.log(`response editDeposit:${response}`);
   }
 
-  let metadataNew = await updateMetadata(args, metadata);
-  let responseUpdateRecord = await updateRecord(args, id, metadataNew);
+  let responseUpdateRecord = {}
+  // Only update metadata if an update is passed.
+  if (args.title || args.authors || args.description || args.date
+    || args.add_communities || args.remove_communities || args.communities
+    || args.zotero_link
+    ) {
+    const metadataNew = await updateMetadata(args, metadata);
+    responseUpdateRecord = await updateRecord(args, id, metadataNew);
+  }
 
-  bucket_url = responseUpdateRecord["links"]["bucket"];
-  deposit_url = responseUpdateRecord["links"]["html"];
   if (args.files) {
+    bucket_url = responseUpdateRecord["links"]["bucket"];
+    deposit_url = responseUpdateRecord["links"]["html"];
     args.files.forEach(async function (filePath) {
       await fileUpload(args, bucket_url, filePath).then(async () => {
         // TO DO:DONE
@@ -512,11 +528,10 @@ export async function newVersion(args) {
     args.files.forEach(async function (filePath) {
       await fileUpload(args, bucket_url, filePath);
     }).then(async () => {
-      await finalActions(args, response_data["id"], deposit_url);
-      console.log("latest_draft: ", response_data["links"]["latest_draft"]);
+      //await finalActions(args, response_data["id"], deposit_url);
+      //console.log("latest_draft: ", response_data["links"]["latest_draft"]);
     });
   }
-
   await finalActions(args, response_data["id"], deposit_url);
   console.log("latest_draft: ", response_data["links"]["latest_draft"]);
 }
@@ -594,7 +609,7 @@ export async function download(args) {
 
   /*
   OLD code:
-
+ 
     data["files"].forEach(async function (fileObj) {
     name = fileObj["filename"];
     console.log(`Downloading ${name}`);
@@ -606,9 +621,9 @@ export async function download(args) {
     fp.write(((fileObj["checksum"] + " ") + fileObj["filename"]));
     fp.close();
   })
-
-
-
+ 
+ 
+ 
   */
 
 }

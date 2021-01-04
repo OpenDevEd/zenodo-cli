@@ -35,6 +35,11 @@ function getArguments() {
     "help": "Show the API request and exit.",
     "default": false
   });
+  parser.add_argument("--allowconceptids", {
+    "action": "store_true",
+    "help": "If you specify a conceptid, this is replaced by the record_id. Otherwise an error is produced.",
+    "default": false
+  });
 
   const subparsers = parser.add_subparsers({ "help": "sub-command help" });
   const parser_list = subparsers.add_parser("list", { "help": "List deposits for this account. Note that the Zenodo API does not seem to send continuation tokens. The first 1000 results are retrieved. Please use --page to retrieve more. The result is the record id, followed by the helper id." });
@@ -86,6 +91,7 @@ function getArguments() {
   });
   parser_get.set_defaults({ "func": getRecord });
 
+  // Make sure these options stay in line with 'update'.
   const parser_create = subparsers.add_parser("create", { "help": "The create command creates new records based on the json files provided, optionally providing a title / date / description / files." });
   parser_create.add_argument("--json", {
     "action": "store",
@@ -156,8 +162,8 @@ function getArguments() {
   parser_duplicate.add_argument("id", { "nargs": 1 });
   parser_duplicate.add_argument("--title", { "action": "store" });
   parser_duplicate.add_argument("--date", { "action": "store" });
-  parser_duplicate.add_argument("--files", { "nargs": "*" });
   parser_duplicate.add_argument("--description", { "action": "store" });
+  parser_duplicate.add_argument("--files", { "nargs": "*" });
   parser_duplicate.add_argument("--publish", {
     "action": "store_true",
     "help": "Publish the deposition after executing the command.",
@@ -180,12 +186,18 @@ function getArguments() {
   });
   parser_duplicate.set_defaults({ "func": duplicate });
 
+  // Make sure that the options for update and create are the same. If you add options to update, also check the update function.
   const parser_update = subparsers.add_parser("update", { "help": "The update command updates the id provided, with the title / date / description / files provided." });
   parser_update.add_argument("id", { "nargs": 1 });
   parser_update.add_argument("--title", { "action": "store" });
   parser_update.add_argument("--date", { "action": "store" });
   parser_update.add_argument("--description", { "action": "store" });
   parser_update.add_argument("--files", { "nargs": "*" });
+/*  parser_create.add_argument("--communities", {
+    "action": "store",
+    "help": "Read list of communities for the record from a file. Overrides data provided via --json."
+  });
+*/
   parser_update.add_argument("--add-communities", { "nargs": "*" });
   parser_update.add_argument("--remove-communities", { "nargs": "*" });
   parser_update.add_argument("--zotero-link", {
@@ -273,8 +285,8 @@ function getArguments() {
   parser_newversion.add_argument("id", { "nargs": 1 });
   parser_newversion.add_argument("--title", { "action": "store" });
   parser_newversion.add_argument("--date", { "action": "store" });
-  parser_newversion.add_argument("--files", { "nargs": "*" });
   parser_newversion.add_argument("--description", { "action": "store" });
+  parser_newversion.add_argument("--files", { "nargs": "*" });
   parser_newversion.add_argument("--publish", {
     "action": "store_true",
     "help": "Publish the deposition after executing the command.",
@@ -301,7 +313,7 @@ function getArguments() {
   parser_download.add_argument("id", { "nargs": 1 });
   parser_download.set_defaults({ "func": download });
 
-  const parser_concept = subparsers.add_parser("concept", { "help": "Get the record id from a helper id." });
+  const parser_concept = subparsers.add_parser("concept", { "help": "Get the record id from the concept id." });
   parser_concept.add_argument("id", { "nargs": 1 });
   parser_concept.add_argument("--dump", {
     "action": "store_true",
