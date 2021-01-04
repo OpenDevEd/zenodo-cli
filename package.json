@@ -45,7 +45,7 @@
     "url": "git+https://github.com/opendeved/zenodo-cli.git"
   },
   "author": "opendeved",
-  "license": "",
+  "license": "ISC",
   "bugs": {
     "url": "https://github.com/opendeved/zenodo-cli/issues"
   },
