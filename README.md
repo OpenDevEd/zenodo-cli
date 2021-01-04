@@ -4,7 +4,7 @@ Install the Zenodo commandline interface with
 ```
 npm install -g zenodo-cli
 ```
-You can then use `zenodo-cli` at the commandline as follows
+See https://www.npmjs.com/package/zenodo-cli. You can then use `zenodo-cli` at the commandline as follows
 ```
 zenodo-cli --help
 ```
