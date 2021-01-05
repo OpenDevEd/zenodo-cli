@@ -362,7 +362,7 @@ if (args.verbose) {
 }
 // zenodo-cli create --title "..." --authors "..." --dryrun
 if (args.dryrun) {
-    console.log(`API command:\n ZenodoAPI.${args.func.name}(${JSON.stringify(args, null, 2)})`);
+    console.log(`API command:\n zenodolib.${args.func.name}(${JSON.stringify(args, null, 2)})`);
 }
 else {
     // ZenodoAPI.${args.func.name}(args)

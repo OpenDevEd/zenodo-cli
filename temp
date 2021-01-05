@@ -1,0 +1,47 @@
+{
+  "server": "nginx",
+  "date": "Mon, 04 Jan 2021 22:58:57 GMT",
+  "content-type": "application/json",
+  "content-length": "1373",
+  "connection": "close",
+  "etag": "\"0\"",
+  "last-modified": "Mon, 04 Jan 2021 22:58:57 GMT",
+  "link": "<https://sandbox.zenodo.org/api/deposit/depositions/712888/files>; rel=\"files\", <https://sandbox.zenodo.org/api/deposit/depositions/712888/actions/edit>; rel=\"edit\", <https://sandbox.zenodo.org/api/deposit/depositions/712888>; rel=\"self\", <https://sandbox.zenodo.org/api/deposit/depositions/712888/actions/publish>; rel=\"publish\", <https://sandbox.zenodo.org/deposit/712888>; rel=\"html\", <https://sandbox.zenodo.org/api/deposit/depositions/712888/actions/discard>; rel=\"discard\"",
+  "location": "https://sandbox.zenodo.org/api/deposit/depositions/712888",
+  "x-ratelimit-limit": "100",
+  "x-ratelimit-remaining": "95",
+  "x-ratelimit-reset": "1609801198",
+  "retry-after": "60",
+  "x-frame-options": "sameorigin",
+  "x-xss-protection": "1; mode=block",
+  "x-content-type-options": "nosniff",
+  "strict-transport-security": "max-age=0",
+  "referrer-policy": "strict-origin-when-cross-origin",
+  "access-control-allow-origin": "*",
+  "access-control-expose-headers": "Content-Type, ETag, Link, X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset",
+  "x-user-id": "53367",
+  "x-request-id": "08b8ad63229171d4771b23822c2a5450"
+}
+
+
+{
+  "server": "nginx",
+  "date": "Mon, 04 Jan 2021 22:58:57 GMT",
+  "content-type": "application/json",
+  "content-length": "2",
+  "connection": "close",
+  "link": "<https://sandbox.zenodo.org/api/deposit/depositions?sort=bestmatch&q=conceptrecid%3A712888+OR+recid%3A712888&page=1&size=10>; rel=\"self\"",
+  "x-ratelimit-limit": "100",
+  "x-ratelimit-remaining": "94",
+  "x-ratelimit-reset": "1609801198",
+  "retry-after": "60",
+  "x-frame-options": "sameorigin",
+  "x-xss-protection": "1; mode=block",
+  "x-content-type-options": "nosniff",
+  "strict-transport-security": "max-age=0",
+  "referrer-policy": "strict-origin-when-cross-origin",
+  "access-control-allow-origin": "*",
+  "access-control-expose-headers": "Content-Type, ETag, Link, X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset",
+  "x-user-id": "53367",
+  "x-request-id": "2518e4d556b408c7702851212fff1af2"
+}
