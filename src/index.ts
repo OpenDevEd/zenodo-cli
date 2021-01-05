@@ -1,3 +1,6 @@
+#!/usr/bin/env node
+
+
 import * as argparse from 'argparse';
 
 // PRODUCTION: Load library
