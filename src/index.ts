@@ -360,7 +360,7 @@ if (args.dryrun) {
   console.log(`API command:\n zenodolib.${args.func.name}(${JSON.stringify(args, null, 2)})`);
 } else {
   // ZenodoAPI.${args.func.name}(args)
-  args.func.name(args);
+  args.func(args);
 }
 
 module.exports = {

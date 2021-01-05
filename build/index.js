@@ -367,7 +367,7 @@ if (args.dryrun) {
 }
 else {
     // ZenodoAPI.${args.func.name}(args)
-    args.func.name(args);
+    args.func(args);
 }
 module.exports = {
     node: 'current'
