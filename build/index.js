@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
@@ -20,7 +21,24 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const argparse = __importStar(require("argparse"));
-const functions_1 = require("./functions"); // from "lib-zenodo-api" where lib-zenodo-api is module in npm install
+// PRODUCTION: Load library
+const zenodolib = require("zenodo-lib");
+// TESTING: Load locally for testing
+//   const zenodolib = require("../zenodo-lib/functions");
+/*
+import {
+  concept,
+  copy,
+  create,
+  download,
+  duplicate,
+  listDepositions,
+  newVersion,
+  getRecord,
+  update,
+  upload
+} from zenodolib; // from "lib-zenodo-api" where lib-zenodo-api is module in npm install
+*/
 function getArguments() {
     const parser = new argparse.ArgumentParser({ "description": "Zenodo command line utility" });
     parser.add_argument("--config", {
@@ -72,7 +90,7 @@ function getArguments() {
         "help": "Show json for list and for depositions after executing the command.",
         "default": false
     });
-    parser_list.set_defaults({ "func": functions_1.listDepositions });
+    parser_list.set_defaults({ "func": zenodolib.listDepositions });
     const parser_get = subparsers.add_parser("get", { "help": "The get command gets the ids listed, and writes these out to id1.json, id2.json etc. The id can be provided as a number, as a deposit URL or record URL" });
     parser_get.add_argument("id", { "nargs": "*" });
     parser_get.add_argument("--publish", {
@@ -95,7 +113,7 @@ function getArguments() {
         "help": "Show json for deposition after executing the command.",
         "default": false
     });
-    parser_get.set_defaults({ "func": functions_1.getRecord });
+    parser_get.set_defaults({ "func": zenodolib.getRecord });
     // Make sure these options stay in line with 'update'.
     const parser_create = subparsers.add_parser("create", { "help": "The create command creates new records based on the json files provided, optionally providing a title / date / description / files." });
     parser_create.add_argument("--json", {
@@ -161,7 +179,7 @@ function getArguments() {
         "help": "Show json for deposition after executing the command.",
         "default": false
     });
-    parser_create.set_defaults({ "func": functions_1.create });
+    parser_create.set_defaults({ "func": zenodolib.create });
     const parser_duplicate = subparsers.add_parser("duplicate", { "help": "The duplicate command duplicates the id to a new id, optionally providing a title / date / description / files." });
     parser_duplicate.add_argument("id", { "nargs": 1 });
     parser_duplicate.add_argument("--title", { "action": "store" });
@@ -188,7 +206,7 @@ function getArguments() {
         "help": "Show json for deposition after executing the command.",
         "default": false
     });
-    parser_duplicate.set_defaults({ "func": functions_1.duplicate });
+    parser_duplicate.set_defaults({ "func": zenodolib.duplicate });
     // Make sure that the options for update and create are the same. If you add options to update, also check the update function.
     const parser_update = subparsers.add_parser("update", { "help": "The update command updates the id provided, with the title / date / description / files provided." });
     parser_update.add_argument("id", { "nargs": 1 });
@@ -231,7 +249,7 @@ function getArguments() {
         "help": "Show json for deposition after executing the command.",
         "default": false
     });
-    parser_update.set_defaults({ "func": functions_1.update });
+    parser_update.set_defaults({ "func": zenodolib.update });
     const parser_upload = subparsers.add_parser("upload", { "help": "Just upload files (shorthand for update id --files ...)" });
     parser_upload.add_argument("id", { "nargs": "?" });
     parser_upload.add_argument("--bucketurl", { "action": "store" });
@@ -256,7 +274,7 @@ function getArguments() {
         "help": "Show json for deposition after executing the command.",
         "default": false
     });
-    parser_upload.set_defaults({ "func": functions_1.upload });
+    parser_upload.set_defaults({ "func": zenodolib.upload });
     const parser_copy = subparsers.add_parser("multiduplicate", { "help": "Duplicates existing deposit with id multiple times, once for each file." });
     parser_copy.add_argument("id", { "nargs": 1 });
     parser_copy.add_argument("files", { "nargs": "*" });
@@ -280,7 +298,7 @@ function getArguments() {
         "help": "Show json for deposition after executing the command.",
         "default": false
     });
-    parser_copy.set_defaults({ "func": functions_1.copy });
+    parser_copy.set_defaults({ "func": zenodolib.copy });
     const parser_newversion = subparsers.add_parser("newversion", { "help": "The newversion command creates a new version of the deposition with id, optionally providing a title / date / description / files." });
     parser_newversion.add_argument("id", { "nargs": 1 });
     parser_newversion.add_argument("--title", { "action": "store" });
@@ -307,10 +325,10 @@ function getArguments() {
         "help": "Show json for deposition after executing the command.",
         "default": false
     });
-    parser_newversion.set_defaults({ "func": functions_1.newVersion });
+    parser_newversion.set_defaults({ "func": zenodolib.newVersion });
     const parser_download = subparsers.add_parser("download", { "help": "Download all the files in the deposition." });
     parser_download.add_argument("id", { "nargs": 1 });
-    parser_download.set_defaults({ "func": functions_1.download });
+    parser_download.set_defaults({ "func": zenodolib.download });
     const parser_concept = subparsers.add_parser("concept", { "help": "Get the record id from the concept id." });
     parser_concept.add_argument("id", { "nargs": 1 });
     parser_concept.add_argument("--dump", {
@@ -329,9 +347,10 @@ function getArguments() {
         "default": false
     });
     //parsing agrument.
-    parser_concept.set_defaults({ "func": functions_1.concept });
-    //parser.parse_args();
+    parser_concept.set_defaults({ "func": zenodolib.concept });
+    parser.parse_args();
     if ((process.argv.length === 1)) {
+        //this function not exist
         parser.print_help();
         process.exit(1);
     }
@@ -344,11 +363,11 @@ if (args.verbose) {
 }
 // zenodo-cli create --title "..." --authors "..." --dryrun
 if (args.dryrun) {
-    console.log(`API command:\n ZenodoAPI.${args.func.name}(${JSON.stringify(args, null, 2)})`);
+    console.log(`API command:\n zenodolib.${args.func.name}(${JSON.stringify(args, null, 2)})`);
 }
 else {
     // ZenodoAPI.${args.func.name}(args)
-    args.func(args);
+    args.func.name(args);
 }
 module.exports = {
     node: 'current'

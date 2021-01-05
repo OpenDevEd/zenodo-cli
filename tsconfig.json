@@ -19,7 +19,7 @@
   },
   "include": [
     "./src/*.ts"
-, "zenodo-lib/functions.ts", "zenodo-lib/helper.ts"  ],
+  ],
   "exclude": [
     "node_modules",
     "./src/BaCkUp/*"
