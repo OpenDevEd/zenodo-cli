@@ -44,6 +44,10 @@
     "type": "git",
     "url": "git+https://github.com/opendeved/zenodo-cli.git"
   },
+  "bin": {
+    "zenodo-cli": "./build/index.js"
+  },
+  "preferGlobal": true,
   "author": "opendeved",
   "license": "ISC",
   "bugs": {
