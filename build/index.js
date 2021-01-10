@@ -357,18 +357,25 @@ function getArguments() {
     return parser.parse_args();
 }
 // --- main ---
-var args = getArguments();
-if (args.verbose) {
-    console.log("zenodo-cli starting...");
+async function run() {
+    var args = getArguments();
+    if (args.verbose) {
+        console.log("zenodo-cli starting...");
+    }
+    // zenodo-cli create --title "..." --authors "..." --dryrun
+    if (args.dryrun) {
+        console.log(`API command:\n zenodolib.${args.func.name}(${JSON.stringify(args, null, 2)})`);
+    }
+    else {
+        // ZenodoAPI.${args.func.name}(args)
+        const result = await args.func(args);
+        if (args.verbose) {
+            console.log(`zenodo-cli result=${JSON.stringify(result, null, 2)}`);
+        }
+        ;
+    }
 }
-// zenodo-cli create --title "..." --authors "..." --dryrun
-if (args.dryrun) {
-    console.log(`API command:\n zenodolib.${args.func.name}(${JSON.stringify(args, null, 2)})`);
-}
-else {
-    // ZenodoAPI.${args.func.name}(args)
-    args.func(args);
-}
+run();
 module.exports = {
     node: 'current'
 };
