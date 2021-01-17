@@ -1,0 +1,1 @@
+npm deprecate zotzen-cli@"<=1.0.12" "The zenodo-cli package has been deprecated. All functionality has been integrated in zenodo-lib - https://www.npmjs.com/package/zenodo-lib. Install zenodo-lib with -g to get the CLI."
