@@ -1,4 +1,4 @@
-# Note
+# OBSOLETE
 
 This package has been deprecated. All functionality available via:
 - zotzen-lib https://github.com/opendeved/zotzen-lib, https://www.npmjs.com/package/zotzen-lib
