@@ -91,6 +91,7 @@ function getArguments() {
         "default": false
     });
     parser_list.set_defaults({ "func": zenodolib.listDepositions });
+    //parser_list.set_defaults({ "action": "listDepositions" });
     const parser_get = subparsers.add_parser("get", { "help": "The get command gets the ids listed, and writes these out to id1.json, id2.json etc. The id can be provided as a number, as a deposit URL or record URL" });
     parser_get.add_argument("id", { "nargs": "*" });
     parser_get.add_argument("--publish", {
@@ -369,6 +370,7 @@ async function run() {
     else {
         // ZenodoAPI.${args.func.name}(args)
         const result = await args.func(args);
+        //const result = await ZenodoAPI(args);
         if (args.verbose) {
             console.log(`zenodo-cli result=${JSON.stringify(result, null, 2)}`);
         }
